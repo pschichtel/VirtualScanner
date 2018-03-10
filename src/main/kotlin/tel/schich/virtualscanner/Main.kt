@@ -127,18 +127,11 @@ fun reader(): (Image) -> Array<Result> {
 }
 
 fun scanScreen(prefix: List<Pair<Int, KeyAction>>, suffix: List<Pair<Int, KeyAction>>, robot: Robot) {
-    val toolkit = Toolkit.getDefaultToolkit()
-
-    //val screen = loadImage("https://api.qrserver.com/v1/create-qr-code/?data=test&size=220x220&margin=0")
-    val screen = robot.createScreenCapture(Rectangle(toolkit.screenSize))
     val graphicsEnv = GraphicsEnvironment.getLocalGraphicsEnvironment()
     val reader = reader()
 
-
     for (device in graphicsEnv.screenDevices) {
-        val bounds = device.defaultConfiguration.bounds
-        val monitorScreen = screen.getSubimage(bounds.x, bounds.y, bounds.width, bounds.height)
-
+        val monitorScreen = robot.createScreenCapture(device.defaultConfiguration.bounds)
 
         val window = JFrame("Debug")
         window.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
