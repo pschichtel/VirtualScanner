@@ -12,12 +12,42 @@ data class Action(val key: String, val children: List<Action>) {
     }
 }
 
-fun compile(input: String): List<Pair<Int, Action.Do>> {
-    val actions = parseSequence(input)
-    return if (actions == null) {
-        emptyList()
-    } else {
-        generateSequence(actions)
+data class Options(val normalizeLineBreaks: Boolean = true,
+                   val allowNesting: Boolean = true,
+                   val allowSpecial: Boolean = true,
+                   val envelope: String? = null,
+                   val envelopeKey: String = "CONTENT",
+                   val envelopeOptions: Options? = null)
+
+
+fun compile(input: String, options: Options): List<Pair<Int, Action.Do>> {
+
+    val actions = parseSequence(input, options)
+    val finalActions = if (actions != null) {
+        if (options.envelope != null) {
+            val envelope = parseSequence(options.envelope, options.envelopeOptions ?: Options())
+            replaceContent(envelope, actions, options.envelopeKey)
+        } else actions
+    } else null
+
+    return if (finalActions == null) emptyList()
+    else generateSequence(finalActions)
+}
+
+fun replaceContent(envelope: List<Action>?, content: List<Action>, key: String): List<Action> {
+    return if (envelope == null || envelope.isEmpty()) emptyList()
+    else envelope.flatMap { action ->
+        val result = if (action.key == key) content
+        else {
+            if (action.children.isEmpty()) listOf(action)
+            else {
+                val newChildren = replaceContent(action.children, content, key)
+                if (newChildren == action.children) listOf(action)
+                else listOf(Action(action.key, newChildren))
+            }
+        }
+        if (result == envelope) envelope
+        else result
     }
 }
 
@@ -85,9 +115,7 @@ fun mapActionToPrefixSuffix(action: Action): Pair<List<Pair<Int, Action.Do>>, Li
         when {
             fKeys.contains(key) -> parseFKey(key)
             special.containsKey(key) -> pressAndRelease(special.getValue(key))
-            else -> {
-                Pair(emptyList(), emptyList())
-            }
+            else -> Pair(emptyList(), emptyList())
         }
     }
 }
@@ -119,40 +147,40 @@ fun pressAndReleaseShifting(key: Int): Pair<List<Pair<Int, Action.Do>>, List<Pai
     return Pair(listOf(Pair(VK_SHIFT, Press)) + pre, post + Pair(VK_SHIFT, Release))
 }
 
-fun parseSequence(s: String): List<Action>? {
-    val (next, actions) = parseActions(s, 0, emptyList())
+fun parseSequence(s: String, options: Options): List<Action>? {
+    val normalized = if (options.normalizeLineBreaks) s.replace("\r\n", "\n")
+                     else s
 
-    return if (next == s.length) {
-        actions
-    } else {
-        null
-    }
+    val (next, actions) = parseActions(normalized, 0, emptyList(), options)
+
+    return if (next == normalized.length) actions
+    else null
 }
 
-tailrec fun parseActions(s: String, offset: Int, actions: List<Action>): Pair<Int, List<Action>> {
-    val (next, action) = parseAction(s, offset)
+tailrec fun parseActions(s: String, offset: Int, actions: List<Action>, options: Options): Pair<Int, List<Action>> {
+    val (next, action) = parseAction(s, offset, options)
     val newActions = actions + action
     return when {
         next >= s.length -> Pair(next, newActions)
         s[next] == ')' -> Pair(next, newActions)
-        else -> parseActions(s, next, newActions)
+        else -> parseActions(s, next, newActions, options)
     }
 }
 
-fun parseAction(s: String, offset: Int): Pair<Int, Action> {
-    val (next, key) = parseKey(s, offset)
+fun parseAction(s: String, offset: Int, options: Options): Pair<Int, Action> {
+    val (next, key) = parseKey(s, offset, options)
     return when {
         next >= s.length -> Pair(next, Action(key, emptyList()))
-        s[next] == '(' -> {
-            val (afterNested, nested) = parseNested(s, next)
+        options.allowNesting && s[next] == '(' -> {
+            val (afterNested, nested) = parseNested(s, next, options)
             Pair(afterNested, Action(key, nested))
         }
         else -> Pair(next, Action(key, emptyList()))
     }
 }
 
-fun parseKey(s: String, offset: Int): Pair<Int, String> {
-    return if (s[offset] == '{') {
+fun parseKey(s: String, offset: Int, options: Options): Pair<Int, String> {
+    return if (options.allowSpecial && s[offset] == '{') {
         val (next, key) = specialKey(s, offset)
         Pair(next, key)
     } else {
@@ -161,8 +189,8 @@ fun parseKey(s: String, offset: Int): Pair<Int, String> {
     }
 }
 
-fun parseNested(s: String, offset: Int): Pair<Int, List<Action>> {
-    val (next, actions) = parseActions(s, offset + 1, emptyList())
+fun parseNested(s: String, offset: Int, options: Options): Pair<Int, List<Action>> {
+    val (next, actions) = parseActions(s, offset + 1, emptyList(), options)
     return if (next >= s.length) Pair(next, actions)
     else Pair(next + 1, actions)
 }
@@ -176,7 +204,17 @@ fun specialKey(s: String, offset: Int): Pair<Int, String> {
 fun simpleKey(s: String, offset: Int): Pair<Int, String> {
     return when {
         offset == s.length - 1 -> Pair(s.length, "" + s[offset])
-        s[offset] == '\\' -> Pair(offset + 2, "" + s[offset + 1])
+        s[offset] == '\\' -> Pair(offset + 2, "" + mapEscape(s[offset + 1]))
         else -> Pair(offset + 1, "" + s[offset])
+    }
+}
+
+fun mapEscape(c: Char): Char {
+    return when (c) {
+        'n' -> '\n'
+        'r' -> '\r'
+        't' -> '\t'
+
+        else -> c
     }
 }

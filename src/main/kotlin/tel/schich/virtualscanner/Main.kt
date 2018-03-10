@@ -5,50 +5,36 @@ import com.google.zxing.client.j2se.BufferedImageLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.multi.GenericMultipleBarcodeReader
 import com.google.zxing.multi.MultipleBarcodeReader
-import java.awt.*
+import java.awt.GraphicsEnvironment
+import java.awt.Image
+import java.awt.Robot
+import java.awt.Toolkit
 import java.awt.datatransfer.*
 import java.awt.image.BufferedImage
-import javax.swing.ImageIcon
-import javax.swing.JFrame
-import javax.swing.JLabel
-import javax.swing.SwingUtilities
 
 fun main(args: Array<String>) {
 
-    if (args.isNotEmpty()) {
-        when(args[0].toLowerCase()) {
-            "screen" -> {
-                if (args.size >= 3) {
-                    val prefixString = args[1]
-                    val suffixString = args[2]
-                    scanScreen(compile(prefixString), compile(suffixString), Robot())
-                } else {
-                    System.err.println("usage: screen <prefix> <suffix>")
-                    System.exit(1)
-                }
-            }
-            "clipboard" -> {
-                if (args.size >= 3) {
-                    val prefixString = args[1]
-                    val suffixString = args[2]
-                    monitorClipboard(compile(prefixString), compile(suffixString), Robot())
-                } else {
-                    System.err.println("usage: clipboard <prefix> <suffix>")
-                    System.exit(1)
-                }
-            }
+    if (args.size >= 2) {
+        val mode = args[0].toLowerCase()
+        val envelope = args[1]
+
+        val options = Options(envelope = envelope)
+
+        when(mode) {
+            "screen" -> scanScreen(options, Robot())
+            "clipboard" -> monitorClipboard(options, Robot())
             else -> {
-                System.err.println("usage: screen|clipboard ....")
+                System.err.println("available modes: screen, clipboard")
                 System.exit(1)
             }
         }
     } else {
-        System.err.println("usage: screen|clipboard ....")
+        System.err.println("usage: screen|clipboard <envelope> ....")
         System.exit(1)
     }
 }
 
-fun monitorClipboard(prefix: List<Pair<Int, Action.Do>>, suffix: List<Pair<Int, Action.Do>>, robot: Robot) {
+fun monitorClipboard(options: Options, robot: Robot) {
 
     Thread {
         val reader = reader()
@@ -60,11 +46,9 @@ fun monitorClipboard(prefix: List<Pair<Int, Action.Do>>, suffix: List<Pair<Int, 
                 val contents = sysClipboard.getContents(null)
                 if (contents.isDataFlavorSupported(DataFlavor.imageFlavor)) {
                     val image = contents.getTransferData(DataFlavor.imageFlavor) as Image
-                    handleResults(robot, prefix, suffix, reader(image))
+                    handleResults(robot, options, reader(image))
                 }
-                SwingUtilities.invokeLater {
-                    sysClipboard.setContents(sysClipboard.getContents(null), this)
-                }
+                sysClipboard.setContents(sysClipboard.getContents(null), this)
             }
 
             override fun flavorsChanged(e: FlavorEvent?) {
@@ -116,36 +100,38 @@ fun reader(): (Image) -> Array<Result> {
     }
 }
 
-fun scanScreen(prefix: List<Pair<Int, Action.Do>>, suffix: List<Pair<Int, Action.Do>>, robot: Robot) {
+fun scanScreen(options: Options, robot: Robot) {
     val graphicsEnv = GraphicsEnvironment.getLocalGraphicsEnvironment()
     val reader = reader()
 
     for (device in graphicsEnv.screenDevices) {
         val monitorScreen = robot.createScreenCapture(device.defaultConfiguration.bounds)
 
-        val window = JFrame("Debug")
-        window.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
-        window.layout = FlowLayout()
-        window.bounds = Rectangle(1200, 1200)
+//        val window = JFrame("Debug")
+//        window.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
+//        window.layout = FlowLayout()
+//        window.bounds = Rectangle(1200, 1200)
+//
+//        val image = JLabel(ImageIcon(monitorScreen.getScaledInstance(window.width, window.height * monitorScreen.height / monitorScreen.width, Image.SCALE_FAST)))
+//        window.add(image)
+//
+//        window.isVisible = true
+//        Thread.sleep(2000)
+//        window.dispose()
 
-        val image = JLabel(ImageIcon(monitorScreen.getScaledInstance(window.width, window.height * monitorScreen.height / monitorScreen.width, Image.SCALE_FAST)))
-        window.add(image)
-
-        window.isVisible = true
-        Thread.sleep(2000)
-        window.dispose()
-
-        handleResults(robot, prefix, suffix, reader(monitorScreen))
+        handleResults(robot, options, reader(monitorScreen))
 
     }
 }
 
-fun handleResults(robot: Robot, prefix: List<Pair<Int, Action.Do>>, suffix: List<Pair<Int, Action.Do>>, results: Array<Result>): Boolean {
+fun handleResults(robot: Robot, options: Options, results: Array<Result>): Boolean {
     return if (results.isNotEmpty()) {
         for (result in results) {
             val code = result.text
             println("Found: $code")
-            act(robot, prefix + compile(code) + suffix)
+            val actions = compile(code, options)
+            println(actions)
+            act(robot, actions)
         }
         true
     } else {
@@ -171,3 +157,43 @@ fun act(r: Robot, code: Int, action: Action.Do) {
         Action.Do.Press -> r.keyPress(code)
     }
 }
+
+/*
+
+halBEGIN.VCARD
+
+VERSION.2.1
+
+N.John Doe
+
+TEL,HOME,VOICE.555,555,5555
+
+TEL,WORK,VOICE.666,666,6666
+
+EMAIL.emailqexample.com
+
+ORG.TEC,IT
+
+URL.https.77www.example.com
+
+END.VCARDlo
+
+halBEGIN.VCARD
+
+VERSION.2.1
+
+N.John Doe
+
+TEL,HOME,VOICE.555,555,5555
+
+TEL,WORK,VOICE.666,666,6666
+
+EMAIL.emailqexample.com
+
+ORG.TEC,IT
+
+URL.https.77www.example.com
+
+END.VCARDlo
+
+*/
