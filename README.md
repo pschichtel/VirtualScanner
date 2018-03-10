@@ -12,3 +12,7 @@ nexted := '(' seq ')'
 SPECIAL_KEY := 'ENTER', 'F1', 'F2', ...
 SIMPLE_KEY := 'a', 'b', ...
 ```
+
+## Testing
+
+Try generating QR codes using e.g. [this website](https://barcode.tec-it.com). And make screenshots of them or copy the image directly tot he clipboard.
