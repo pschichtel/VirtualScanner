@@ -18,6 +18,13 @@ import javax.swing.SwingUtilities
 
 fun main(args: Array<String>) {
 
+//    println("abc:     ${parseSequence("abc")}")
+//    println("a(b)c:   ${parseSequence("a(b)c")}")
+//    println("a(bc):   ${parseSequence("a(bc)")}")
+//    println("a(b(c)): ${parseSequence("a(b(c))")}")
+//    println("{F4}a(b(c)): ${generateSequence(parseSequence("{F4}a(b(c))") ?: emptyList())}")
+//    System.exit(1)
+
     if (args.isNotEmpty()) {
         when(args[0].toLowerCase()) {
             "screen" -> {
@@ -80,6 +87,7 @@ fun monitorClipboard(prefix: List<Pair<Int, KeyAction>>, suffix: List<Pair<Int, 
     }.start()
 
     Thread {
+        // keep us alive.
         Thread.currentThread().join()
     }.start()
 
@@ -171,7 +179,7 @@ fun stroke(code: Int): List<Pair<Int, KeyAction>> {
     return if (code == KeyEvent.BUTTON1_DOWN_MASK || code == KeyEvent.BUTTON2_DOWN_MASK || code == KeyEvent.BUTTON3_DOWN_MASK) {
         listOf(Pair(code, KeyAction.MouseDown), Pair(code, KeyAction.MouseUp))
     } else {
-        listOf(Pair(code, KeyAction.KeyDown), Pair(code, KeyAction.KeyUp))
+        listOf(Pair(code, KeyAction.Press), Pair(code, KeyAction.Release))
     }
 }
 
@@ -194,35 +202,35 @@ fun act(r: Robot, actions: List<Pair<Int, KeyAction>>) {
 
 fun act(r: Robot, code: Int, action: KeyAction) {
     when (action) {
-        KeyAction.KeyUp -> r.keyRelease(code)
-        KeyAction.KeyDown -> r.keyPress(code)
+        KeyAction.Release -> r.keyRelease(code)
+        KeyAction.Press -> r.keyPress(code)
         KeyAction.MouseUp -> r.mouseRelease(code)
         KeyAction.MouseDown -> r.mousePress(code)
     }
 }
 
 enum class KeyAction {
-    KeyUp, KeyDown, MouseUp, MouseDown
+    Release, Press, MouseUp, MouseDown
 }
 
 fun charToAction(c: Char): List<Pair<Int, KeyAction>> {
     return when (c) {
         in 'a'..'z' -> {
             val code = KeyEvent.VK_A + (c - 'a')
-            listOf(Pair(code, KeyAction.KeyDown), Pair(code, KeyAction.KeyUp))
+            listOf(Pair(code, KeyAction.Press), Pair(code, KeyAction.Release))
         }
         in 'A'..'Z' -> {
             val code = KeyEvent.VK_A + (c - 'A')
             listOf(
-                    Pair(KeyEvent.VK_SHIFT, KeyAction.KeyDown),
-                    Pair(code, KeyAction.KeyDown),
-                    Pair(code, KeyAction.KeyUp),
-                    Pair(KeyEvent.VK_SHIFT, KeyAction.KeyUp)
+                    Pair(KeyEvent.VK_SHIFT, KeyAction.Press),
+                    Pair(code, KeyAction.Press),
+                    Pair(code, KeyAction.Release),
+                    Pair(KeyEvent.VK_SHIFT, KeyAction.Release)
             )
         }
         in '0'..'9' -> {
             val code = KeyEvent.VK_0 + (c - '0')
-            listOf(Pair(code, KeyAction.KeyDown), Pair(code, KeyAction.KeyUp))
+            listOf(Pair(code, KeyAction.Press), Pair(code, KeyAction.Release))
         }
         else -> emptyList()
     }
