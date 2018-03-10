@@ -7,10 +7,7 @@ import com.google.zxing.multi.GenericMultipleBarcodeReader
 import com.google.zxing.multi.MultipleBarcodeReader
 import java.awt.*
 import java.awt.datatransfer.*
-import java.awt.event.KeyEvent
 import java.awt.image.BufferedImage
-import java.net.URL
-import javax.imageio.ImageIO
 import javax.swing.ImageIcon
 import javax.swing.JFrame
 import javax.swing.JLabel
@@ -18,20 +15,13 @@ import javax.swing.SwingUtilities
 
 fun main(args: Array<String>) {
 
-//    println("abc:     ${parseSequence("abc")}")
-//    println("a(b)c:   ${parseSequence("a(b)c")}")
-//    println("a(bc):   ${parseSequence("a(bc)")}")
-//    println("a(b(c)): ${parseSequence("a(b(c))")}")
-//    println("{F4}a(b(c)): ${generateSequence(parseSequence("{F4}a(b(c))") ?: emptyList())}")
-//    System.exit(1)
-
     if (args.isNotEmpty()) {
         when(args[0].toLowerCase()) {
             "screen" -> {
                 if (args.size >= 3) {
                     val prefixString = args[1]
                     val suffixString = args[2]
-                    scanScreen(typeOut(prefixString), typeOut(suffixString), Robot())
+                    scanScreen(compile(prefixString), compile(suffixString), Robot())
                 } else {
                     System.err.println("usage: screen <prefix> <suffix>")
                     System.exit(1)
@@ -41,7 +31,7 @@ fun main(args: Array<String>) {
                 if (args.size >= 3) {
                     val prefixString = args[1]
                     val suffixString = args[2]
-                    monitorClipboard(typeOut(prefixString), typeOut(suffixString), Robot())
+                    monitorClipboard(compile(prefixString), compile(suffixString), Robot())
                 } else {
                     System.err.println("usage: clipboard <prefix> <suffix>")
                     System.exit(1)
@@ -58,7 +48,7 @@ fun main(args: Array<String>) {
     }
 }
 
-fun monitorClipboard(prefix: List<Pair<Int, KeyAction>>, suffix: List<Pair<Int, KeyAction>>, robot: Robot) {
+fun monitorClipboard(prefix: List<Pair<Int, Action.Do>>, suffix: List<Pair<Int, Action.Do>>, robot: Robot) {
 
     Thread {
         val reader = reader()
@@ -126,7 +116,7 @@ fun reader(): (Image) -> Array<Result> {
     }
 }
 
-fun scanScreen(prefix: List<Pair<Int, KeyAction>>, suffix: List<Pair<Int, KeyAction>>, robot: Robot) {
+fun scanScreen(prefix: List<Pair<Int, Action.Do>>, suffix: List<Pair<Int, Action.Do>>, robot: Robot) {
     val graphicsEnv = GraphicsEnvironment.getLocalGraphicsEnvironment()
     val reader = reader()
 
@@ -150,12 +140,12 @@ fun scanScreen(prefix: List<Pair<Int, KeyAction>>, suffix: List<Pair<Int, KeyAct
     }
 }
 
-fun handleResults(robot: Robot, prefix: List<Pair<Int, KeyAction>>, suffix: List<Pair<Int, KeyAction>>, results: Array<Result>): Boolean {
+fun handleResults(robot: Robot, prefix: List<Pair<Int, Action.Do>>, suffix: List<Pair<Int, Action.Do>>, results: Array<Result>): Boolean {
     return if (results.isNotEmpty()) {
         for (result in results) {
             val code = result.text
             println("Found: $code")
-            act(robot, prefix + typeOut(code) + suffix)
+            act(robot, prefix + compile(code) + suffix)
         }
         true
     } else {
@@ -164,67 +154,20 @@ fun handleResults(robot: Robot, prefix: List<Pair<Int, KeyAction>>, suffix: List
     }
 }
 
-fun loadImage(url: String): BufferedImage {
-    return ImageIO.read(URL(url))
-}
+//fun loadImage(url: String): BufferedImage {
+//    return ImageIO.read(URL(url))
+//}
 
-fun stroke(code: Int): List<Pair<Int, KeyAction>> {
-    return if (code == KeyEvent.BUTTON1_DOWN_MASK || code == KeyEvent.BUTTON2_DOWN_MASK || code == KeyEvent.BUTTON3_DOWN_MASK) {
-        listOf(Pair(code, KeyAction.MouseDown), Pair(code, KeyAction.MouseUp))
-    } else {
-        listOf(Pair(code, KeyAction.Press), Pair(code, KeyAction.Release))
-    }
-}
-
-fun typeOut(s: String): List<Pair<Int, KeyAction>> {
-    return s.flatMap { c ->
-        when (c) {
-            '\n' -> stroke(KeyEvent.VK_ENTER)
-            ' ' -> stroke(KeyEvent.VK_SPACE)
-            else -> charToAction(c)
-        }
-    }
-}
-
-fun act(r: Robot, actions: List<Pair<Int, KeyAction>>) {
+fun act(r: Robot, actions: List<Pair<Int, Action.Do>>) {
     for ((code, action) in actions) {
         act(r, code, action)
         Thread.sleep(20)
     }
 }
 
-fun act(r: Robot, code: Int, action: KeyAction) {
+fun act(r: Robot, code: Int, action: Action.Do) {
     when (action) {
-        KeyAction.Release -> r.keyRelease(code)
-        KeyAction.Press -> r.keyPress(code)
-        KeyAction.MouseUp -> r.mouseRelease(code)
-        KeyAction.MouseDown -> r.mousePress(code)
-    }
-}
-
-enum class KeyAction {
-    Release, Press, MouseUp, MouseDown
-}
-
-fun charToAction(c: Char): List<Pair<Int, KeyAction>> {
-    return when (c) {
-        in 'a'..'z' -> {
-            val code = KeyEvent.VK_A + (c - 'a')
-            listOf(Pair(code, KeyAction.Press), Pair(code, KeyAction.Release))
-        }
-        in 'A'..'Z' -> {
-            val code = KeyEvent.VK_A + (c - 'A')
-            listOf(
-                    Pair(KeyEvent.VK_SHIFT, KeyAction.Press),
-                    Pair(code, KeyAction.Press),
-                    Pair(code, KeyAction.Release),
-                    Pair(KeyEvent.VK_SHIFT, KeyAction.Release)
-            )
-        }
-        in '0'..'9' -> {
-            val code = KeyEvent.VK_0 + (c - '0')
-            listOf(Pair(code, KeyAction.Press), Pair(code, KeyAction.Release))
-        }
-        else -> emptyList()
+        Action.Do.Release -> r.keyRelease(code)
+        Action.Do.Press -> r.keyPress(code)
     }
 }

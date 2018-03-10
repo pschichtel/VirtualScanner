@@ -1,74 +1,122 @@
 package tel.schich.virtualscanner
 
-import java.awt.event.KeyEvent
+import tel.schich.virtualscanner.Action.Do.Press
+import tel.schich.virtualscanner.Action.Do.Release
+import java.awt.event.KeyEvent.*
 import java.lang.Character.*
 
-data class Action(val key: String, val children: List<Action>)
+data class Action(val key: String, val children: List<Action>) {
 
-fun generateSequence(actions: List<Action>): List<Pair<Int, KeyAction>> {
+    enum class Do {
+        Release, Press
+    }
+}
+
+fun compile(input: String): List<Pair<Int, Action.Do>> {
+    val actions = parseSequence(input)
+    return if (actions == null) {
+        emptyList()
+    } else {
+        generateSequence(actions)
+    }
+}
+
+fun generateSequence(actions: List<Action>): List<Pair<Int, Action.Do>> {
     return actions.flatMap { a ->
         val (prefix, suffix) = mapActionToPrefixSuffix(a)
         prefix + generateSequence(a.children) + suffix
     }
 }
 
-fun mapActionToPrefixSuffix(action: Action): Pair<List<Pair<Int, KeyAction>>, List<Pair<Int, KeyAction>>> {
+fun mapActionToPrefixSuffix(action: Action): Pair<List<Pair<Int, Action.Do>>, List<Pair<Int, Action.Do>>> {
 
     val fKeys = (1..24).map { i -> "F$i" }.toSet()
+    val special = mapOf(
+            Pair("ENTER",     VK_ENTER),
+            Pair("RETURN",    VK_ENTER),
+            Pair("BACKSPACE", VK_BACK_SPACE),
+            Pair("SPACE",     VK_SPACE),
+            Pair("CTRL",      VK_CONTROL),
+            Pair("SHIFT",     VK_SHIFT),
+            Pair("ALT",       VK_ALT),
+            Pair("ALTGR",     VK_ALT_GRAPH),
+            Pair("CONTEXT",   VK_CONTEXT_MENU),
+            Pair("WIN",       VK_META),
+            Pair("TAB",       VK_TAB)
+    )
+    val charKeys = mapOf(
+            Pair('\\', VK_BACK_SLASH),
+            Pair('/',  VK_SLASH),
+            Pair('!',  VK_EXCLAMATION_MARK),
+            Pair(' ',  VK_SPACE),
+            Pair(':',  VK_COLON),
+            Pair(';',  VK_SEMICOLON),
+            Pair('-',  VK_COMMA),
+            Pair('@',  VK_AT),
+            Pair('^',  VK_CIRCUMFLEX),
+            Pair('=',  VK_EQUALS),
+            Pair('_',  VK_UNDERSCORE),
+            Pair('.',  VK_PERIOD),
+            Pair('€',  VK_EURO_SIGN),
+            Pair('$',  VK_DOLLAR),
+            Pair('&',  VK_AMPERSAND),
+            Pair('>',  VK_GREATER),
+            Pair('<',  VK_LESS),
+            Pair('(',  VK_LEFT_PARENTHESIS),
+            Pair('(',  VK_RIGHT_PARENTHESIS),
+            Pair('[',  VK_OPEN_BRACKET),
+            Pair(']',  VK_CLOSE_BRACKET),
+            Pair('{',  VK_BRACELEFT),
+            Pair('}',  VK_BRACERIGHT),
+            Pair('\t', VK_TAB),
+            Pair('\n', VK_ENTER),
+            Pair('\r', VK_ENTER)
+    )
 
-    val key = action.key.toUpperCase()
-    return when {
-        fKeys.contains(key) -> parseFKey(key)
-        key == "ENTER" -> pressAndRelease(KeyEvent.VK_ENTER)
-        key == "BACKSPACE" -> pressAndRelease(KeyEvent.VK_BACK_SPACE)
-        key == "SPACE" -> pressAndRelease(KeyEvent.VK_SPACE)
-        key == "CTRL" -> pressAndRelease(KeyEvent.VK_CONTROL)
-        key == "SHIFT" -> pressAndRelease(KeyEvent.VK_SHIFT)
-        key == "ALT" -> pressAndRelease(KeyEvent.VK_ALT)
-        key == "ALTGR" -> pressAndRelease(KeyEvent.VK_ALT_GRAPH)
-        key == "CONTEXT" -> pressAndRelease(KeyEvent.VK_CONTEXT_MENU)
-        key.length == 1 -> {
-            val c = key[0]
-            if (isLetterOrDigit(c)) parseLetter(c)
-            else when (c) {
-                '\\' -> pressAndRelease(KeyEvent.VK_BACK_SLASH)
-                '/' -> pressAndRelease(KeyEvent.VK_SLASH)
-                '!' -> pressAndRelease(KeyEvent.VK_EXCLAMATION_MARK)
-                ' ' -> pressAndRelease(KeyEvent.VK_SPACE)
-                else -> Pair(emptyList(), emptyList())
-            }
+    return if (action.key.length == 1) {
+        val c = action.key[0]
+        when {
+            isLetterOrDigit(c) -> parseLetter(c)
+            charKeys.containsKey(c) -> pressAndRelease(charKeys.getValue(c))
+            else -> Pair(emptyList(), emptyList())
         }
-        else -> {
-            Pair(emptyList(), emptyList())
+    } else {
+        val key = action.key.toUpperCase()
+        when {
+            fKeys.contains(key) -> parseFKey(key)
+            special.containsKey(key) -> pressAndRelease(special.getValue(key))
+            else -> {
+                Pair(emptyList(), emptyList())
+            }
         }
     }
 }
 
-fun parseFKey(key: String): Pair<List<Pair<Int, KeyAction>>, List<Pair<Int, KeyAction>>> {
+fun parseFKey(key: String): Pair<List<Pair<Int, Action.Do>>, List<Pair<Int, Action.Do>>> {
     val num = key.substring(1).toInt()
     return if (num < 1 || num > 24) Pair(emptyList(), emptyList())
     else {
-        if (num <= 12) pressAndRelease(KeyEvent.VK_F1 + (num - 1))
-        else pressAndRelease(KeyEvent.VK_F13 + (num - 13))
+        if (num <= 12) pressAndRelease(VK_F1 + (num - 1))
+        else pressAndRelease(VK_F13 + (num - 13))
     }
 }
 
-fun parseLetter(c: Char): Pair<List<Pair<Int, KeyAction>>, List<Pair<Int, KeyAction>>> {
+fun parseLetter(c: Char): Pair<List<Pair<Int, Action.Do>>, List<Pair<Int, Action.Do>>> {
     return when {
-        isLowerCase(c) -> pressAndRelease(KeyEvent.VK_A + (c - 'a'))
-        isUpperCase(c) -> pressAndReleaseShifting(KeyEvent.VK_A + (c - 'A'))
-        else -> pressAndRelease(KeyEvent.VK_0 + (c - '0'))
+        isLowerCase(c) -> pressAndRelease(VK_A + (c - 'a'))
+        isUpperCase(c) -> pressAndReleaseShifting(VK_A + (c - 'A'))
+        else -> pressAndRelease(VK_0 + (c - '0'))
     }
 }
 
-fun pressAndRelease(key: Int): Pair<List<Pair<Int, KeyAction>>, List<Pair<Int, KeyAction>>> {
-    return Pair(listOf(Pair(key, KeyAction.Press)), listOf(Pair(key, KeyAction.Release)))
+fun pressAndRelease(key: Int): Pair<List<Pair<Int, Action.Do>>, List<Pair<Int, Action.Do>>> {
+    return Pair(listOf(Pair(key, Press)), listOf(Pair(key, Release)))
 }
 
-fun pressAndReleaseShifting(key: Int): Pair<List<Pair<Int, KeyAction>>, List<Pair<Int, KeyAction>>> {
+fun pressAndReleaseShifting(key: Int): Pair<List<Pair<Int, Action.Do>>, List<Pair<Int, Action.Do>>> {
     val (pre, post) = pressAndRelease(key)
 
-    return Pair(listOf(Pair(KeyEvent.VK_SHIFT, KeyAction.Press)) + pre, post + Pair(KeyEvent.VK_SHIFT, KeyAction.Release))
+    return Pair(listOf(Pair(VK_SHIFT, Press)) + pre, post + Pair(VK_SHIFT, Release))
 }
 
 fun parseSequence(s: String): List<Action>? {
