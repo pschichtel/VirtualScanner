@@ -19,10 +19,11 @@ fun main(args: Array<String>) {
         val envelope = args[1]
 
         val options = Options(envelope = envelope)
+        val robot = Robot()
 
         when(mode) {
-            "screen" -> scanScreen(options, Robot())
-            "clipboard" -> monitorClipboard(options, Robot())
+            "screen" -> scanScreen(options, robot)
+            "clipboard" -> monitorClipboard(options, robot)
             else -> {
                 System.err.println("available modes: screen, clipboard")
                 System.exit(1)
