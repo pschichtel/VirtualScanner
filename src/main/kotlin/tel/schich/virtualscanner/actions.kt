@@ -2,6 +2,7 @@ package tel.schich.virtualscanner
 
 import tel.schich.virtualscanner.Action.Do.Press
 import tel.schich.virtualscanner.Action.Do.Release
+import java.awt.event.KeyEvent
 import java.awt.event.KeyEvent.*
 import java.lang.Character.*
 
@@ -79,7 +80,9 @@ fun mapActionToPrefixSuffix(action: Action): Pair<List<Pair<Int, Action.Do>>, Li
             Pair('/',  VK_SLASH),
             Pair('!',  VK_EXCLAMATION_MARK),
             Pair(' ',  VK_SPACE),
+            Pair('.',  VK_STOP),
             Pair(':',  VK_COLON),
+            Pair(',',  VK_COMMA),
             Pair(';',  VK_SEMICOLON),
             Pair('-',  VK_COMMA),
             Pair('@',  VK_AT),
@@ -88,7 +91,7 @@ fun mapActionToPrefixSuffix(action: Action): Pair<List<Pair<Int, Action.Do>>, Li
             Pair('_',  VK_UNDERSCORE),
             Pair('.',  VK_PERIOD),
             Pair('€',  VK_EURO_SIGN),
-            Pair('$',  VK_DOLLAR),
+            //Pair('$',  VK_DOLLAR),
             Pair('&',  VK_AMPERSAND),
             Pair('>',  VK_GREATER),
             Pair('<',  VK_LESS),
@@ -103,11 +106,16 @@ fun mapActionToPrefixSuffix(action: Action): Pair<List<Pair<Int, Action.Do>>, Li
             Pair('\r', VK_ENTER)
     )
 
+    KeyEvent.getExtendedKeyCodeForChar('$'.toInt())
+
     return if (action.key.length == 1) {
         val c = action.key[0]
+        val fallback = KeyEvent.getExtendedKeyCodeForChar(c.toInt())
         when {
             isLetterOrDigit(c) -> parseLetter(c)
             charKeys.containsKey(c) -> pressAndRelease(charKeys.getValue(c))
+            c == '$' -> pressAndRelease(VK_SHIFT, VK_4)
+            fallback != VK_UNDEFINED -> pressAndRelease(fallback)
             else -> Pair(emptyList(), emptyList())
         }
     } else {
@@ -137,8 +145,10 @@ fun parseLetter(c: Char): Pair<List<Pair<Int, Action.Do>>, List<Pair<Int, Action
     }
 }
 
-fun pressAndRelease(key: Int): Pair<List<Pair<Int, Action.Do>>, List<Pair<Int, Action.Do>>> {
-    return Pair(listOf(Pair(key, Press)), listOf(Pair(key, Release)))
+fun pressAndRelease(vararg key: Int): Pair<List<Pair<Int, Action.Do>>, List<Pair<Int, Action.Do>>> {
+    val press = key.map { k -> Pair(k, Press) }
+    val release = key.reversed().map { k -> Pair(k, Release) }
+    return Pair(press, release)
 }
 
 fun pressAndReleaseShifting(key: Int): Pair<List<Pair<Int, Action.Do>>, List<Pair<Int, Action.Do>>> {

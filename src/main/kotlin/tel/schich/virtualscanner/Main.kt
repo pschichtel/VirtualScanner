@@ -10,9 +10,22 @@ import java.awt.Image
 import java.awt.Robot
 import java.awt.Toolkit
 import java.awt.datatransfer.*
+import java.awt.im.InputContext
 import java.awt.image.BufferedImage
+import java.lang.IllegalArgumentException
+import java.util.*
 
 fun main(args: Array<String>) {
+
+    val inputContext = InputContext.getInstance()
+    val localeParts = (System.getenv("KB_LAYOUT_LOCALE") ?: "en_US").split('_')
+    val locale = when {
+        localeParts.size == 1 -> Locale(localeParts[0])
+        localeParts.size == 2 -> Locale(localeParts[0], localeParts[1])
+        localeParts.size >= 3 -> Locale(localeParts[0], localeParts[1], localeParts[2])
+        else -> Locale.ENGLISH
+    }
+    inputContext.selectInputMethod(locale)
 
     if (args.size >= 2) {
         val mode = args[0].toLowerCase()
@@ -129,7 +142,7 @@ fun handleResults(robot: Robot, options: Options, results: Array<Result>): Boole
     return if (results.isNotEmpty()) {
         for (result in results) {
             val code = result.text
-            println("Found: $code")
+            println("Found: >$code<")
             val actions = compile(code, options)
             println(actions)
             act(robot, actions)
@@ -153,8 +166,12 @@ fun act(r: Robot, actions: List<Pair<Int, Action.Do>>) {
 }
 
 fun act(r: Robot, code: Int, action: Action.Do) {
-    when (action) {
-        Action.Do.Release -> r.keyRelease(code)
-        Action.Do.Press -> r.keyPress(code)
+    try {
+        when (action) {
+            Action.Do.Release -> r.keyRelease(code)
+            Action.Do.Press -> r.keyPress(code)
+        }
+    } catch (e: IllegalArgumentException) {
+        throw RuntimeException("Unable to emit key stroke ($code, $action): ${e.message}", e)
     }
 }
