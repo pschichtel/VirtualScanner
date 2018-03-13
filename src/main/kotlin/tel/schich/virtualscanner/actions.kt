@@ -2,7 +2,6 @@ package tel.schich.virtualscanner
 
 import tel.schich.virtualscanner.Action.Do.Press
 import tel.schich.virtualscanner.Action.Do.Release
-import java.awt.event.KeyEvent
 import java.awt.event.KeyEvent.*
 import java.lang.Character.*
 
@@ -76,41 +75,48 @@ fun mapActionToPrefixSuffix(action: Action): Pair<List<Pair<Int, Action.Do>>, Li
             Pair("TAB",       VK_TAB)
     )
     val charKeys = mapOf(
-            Pair('\\', VK_BACK_SLASH),
-            Pair('/',  VK_SLASH),
-            Pair('!',  VK_EXCLAMATION_MARK),
-            Pair(' ',  VK_SPACE),
-            Pair('.',  VK_STOP),
-            Pair(':',  VK_COLON),
-            Pair(',',  VK_COMMA),
-            Pair(';',  VK_SEMICOLON),
-            Pair('-',  VK_COMMA),
-            Pair('@',  VK_AT),
-            Pair('^',  VK_CIRCUMFLEX),
-            Pair('=',  VK_EQUALS),
-            Pair('_',  VK_UNDERSCORE),
-            Pair('.',  VK_PERIOD),
-            Pair('€',  VK_EURO_SIGN),
-            //Pair('$',  VK_DOLLAR),
-            Pair('&',  VK_AMPERSAND),
-            Pair('>',  VK_GREATER),
-            Pair('<',  VK_LESS),
-            Pair('(',  VK_LEFT_PARENTHESIS),
-            Pair('(',  VK_RIGHT_PARENTHESIS),
-            Pair('[',  VK_OPEN_BRACKET),
-            Pair(']',  VK_CLOSE_BRACKET),
-            Pair('{',  VK_BRACELEFT),
-            Pair('}',  VK_BRACERIGHT),
-            Pair('\t', VK_TAB),
-            Pair('\n', VK_ENTER),
-            Pair('\r', VK_ENTER)
+            Pair('\\', arrayOf(key('\\'))),
+            Pair('|',  arrayOf(VK_SHIFT, key('|'))),
+            Pair('/',  arrayOf(VK_SHIFT, key('/'))),
+            //Pair('?',  arrayOf()),
+            Pair('!',  arrayOf(VK_SHIFT, key('!'))),
+            Pair(' ',  arrayOf(key(' '))),
+            Pair('.',  arrayOf(key('.'))),
+            Pair(':',  arrayOf(VK_SHIFT, key(':'))),
+            Pair(';',  arrayOf(VK_SHIFT, key(';'))),
+            Pair('-',  arrayOf(key('-'))),
+            Pair('_',  arrayOf(VK_SHIFT, key('_'))),
+            Pair('@',  arrayOf(VK_SHIFT, key('@'))),
+            Pair('#',  arrayOf(VK_SHIFT, key('#'))),
+            Pair('^',  arrayOf(VK_SHIFT, key('^'))),
+            Pair('=',  arrayOf(key('='))),
+            Pair('+',  arrayOf(VK_SHIFT, key('+'))),
+            Pair('$',  arrayOf(VK_SHIFT, key('$'))),
+            Pair('&',  arrayOf(VK_SHIFT, key('&'))),
+            Pair('*',  arrayOf(VK_SHIFT, key('*'))),
+            Pair('\'', arrayOf(VK_QUOTE)),
+            Pair('"',  arrayOf(VK_SHIFT, VK_QUOTE)),
+            Pair('.',  arrayOf(key('.'))),
+            Pair('>',  arrayOf(VK_SHIFT, key('>'))),
+            Pair(',',  arrayOf(key(','))),
+            Pair('<',  arrayOf(VK_SHIFT, key('<'))),
+            Pair('(',  arrayOf(VK_SHIFT, key('('))),
+            Pair(')',  arrayOf(VK_SHIFT, key(')'))),
+            Pair('[',  arrayOf(key('['))),
+            Pair('{',  arrayOf(VK_SHIFT, key('{'))),
+            Pair(']',  arrayOf(key(']'))),
+            Pair('}',  arrayOf(VK_SHIFT, key('}'))),
+            Pair('%',  arrayOf(VK_SHIFT, key('%'))),
+            Pair('\t', arrayOf(VK_TAB)),
+            Pair('\n', arrayOf(VK_ENTER)),
+            Pair('\r', arrayOf(VK_ENTER))
     )
 
-    KeyEvent.getExtendedKeyCodeForChar('$'.toInt())
+    getExtendedKeyCodeForChar('$'.toInt())
 
     return if (action.key.length == 1) {
         val c = action.key[0]
-        val fallback = KeyEvent.getExtendedKeyCodeForChar(c.toInt())
+        val fallback = getExtendedKeyCodeForChar(c.toInt())
         when {
             isLetterOrDigit(c) -> parseLetter(c)
             charKeys.containsKey(c) -> pressAndRelease(charKeys.getValue(c))
@@ -126,6 +132,10 @@ fun mapActionToPrefixSuffix(action: Action): Pair<List<Pair<Int, Action.Do>>, Li
             else -> Pair(emptyList(), emptyList())
         }
     }
+}
+
+fun key(c: Char): Int {
+    return getExtendedKeyCodeForChar(c.toInt())
 }
 
 fun parseFKey(key: String): Pair<List<Pair<Int, Action.Do>>, List<Pair<Int, Action.Do>>> {
@@ -146,6 +156,10 @@ fun parseLetter(c: Char): Pair<List<Pair<Int, Action.Do>>, List<Pair<Int, Action
 }
 
 fun pressAndRelease(vararg key: Int): Pair<List<Pair<Int, Action.Do>>, List<Pair<Int, Action.Do>>> {
+    return pressAndRelease(key.toTypedArray())
+}
+
+fun pressAndRelease(key: Array<Int>): Pair<List<Pair<Int, Action.Do>>, List<Pair<Int, Action.Do>>> {
     val press = key.map { k -> Pair(k, Press) }
     val release = key.reversed().map { k -> Pair(k, Release) }
     return Pair(press, release)

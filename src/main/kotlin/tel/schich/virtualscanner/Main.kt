@@ -18,12 +18,12 @@ import java.util.*
 fun main(args: Array<String>) {
 
     val inputContext = InputContext.getInstance()
-    val localeParts = (System.getenv("KB_LAYOUT_LOCALE") ?: "en_US").split('_')
+    val localeParts = (System.getenv("KB_LAYOUT_LOCALE") ?: "en_US_POSIX").split('_')
     val locale = when {
         localeParts.size == 1 -> Locale(localeParts[0])
         localeParts.size == 2 -> Locale(localeParts[0], localeParts[1])
         localeParts.size >= 3 -> Locale(localeParts[0], localeParts[1], localeParts[2])
-        else -> Locale.ENGLISH
+        else -> Locale("en", "US", "POSIX")
     }
     inputContext.selectInputMethod(locale)
 
@@ -161,7 +161,7 @@ fun handleResults(robot: Robot, options: Options, results: Array<Result>): Boole
 fun act(r: Robot, actions: List<Pair<Int, Action.Do>>) {
     for ((code, action) in actions) {
         act(r, code, action)
-        Thread.sleep(20)
+        Thread.sleep(10)
     }
 }
 
