@@ -13,25 +13,19 @@ import java.awt.datatransfer.*
 import java.awt.im.InputContext
 import java.awt.image.BufferedImage
 import java.lang.IllegalArgumentException
+import java.nio.file.Paths
 import java.util.*
 
 fun main(args: Array<String>) {
 
-    val inputContext = InputContext.getInstance()
-    val localeParts = (System.getenv("KB_LAYOUT_LOCALE") ?: "en_US_POSIX").split('_')
-    val locale = when {
-        localeParts.size == 1 -> Locale(localeParts[0])
-        localeParts.size == 2 -> Locale(localeParts[0], localeParts[1])
-        localeParts.size >= 3 -> Locale(localeParts[0], localeParts[1], localeParts[2])
-        else -> Locale("en", "US", "POSIX")
-    }
-    inputContext.selectInputMethod(locale)
+    InputContext.getInstance().selectInputMethod(Locale.ENGLISH)
 
-    if (args.size >= 2) {
+    if (args.size >= 3) {
         val mode = args[0].toLowerCase()
-        val envelope = args[1]
+        val layoutFile = args[1]
+        val envelope = args[2]
 
-        val options = Options(envelope = envelope)
+        val options = loadLayout(Paths.get(layoutFile), Options(envelope = envelope))
         val robot = Robot()
 
         when(mode) {

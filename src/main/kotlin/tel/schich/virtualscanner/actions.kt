@@ -5,7 +5,13 @@ import tel.schich.virtualscanner.Action.Do.Release
 import java.awt.event.KeyEvent.*
 import java.lang.Character.*
 
-data class Action(val key: String, val children: List<Action>) {
+sealed class Key
+class Exact(val char: Char) : Key()
+class Named(val name: String) : Key()
+class Code(val num: Int) : Key()
+object Content : Key()
+
+data class Action(val key: Key, val children: List<Action>) {
 
     enum class Do {
         Release, Press
@@ -17,7 +23,8 @@ data class Options(val normalizeLineBreaks: Boolean = true,
                    val allowSpecial: Boolean = true,
                    val envelope: String? = null,
                    val envelopeKey: String = "CONTENT",
-                   val envelopeOptions: Options? = null)
+                   val envelopeOptions: Options? = null,
+                   val keyboardLayout: KeyboardLayout = EmptyLayout)
 
 
 fun compile(input: String, options: Options): List<Pair<Int, Action.Do>> {
@@ -26,22 +33,22 @@ fun compile(input: String, options: Options): List<Pair<Int, Action.Do>> {
     val finalActions = if (actions != null) {
         if (options.envelope != null) {
             val envelope = parseSequence(options.envelope, options.envelopeOptions ?: Options())
-            replaceContent(envelope, actions, options.envelopeKey)
+            replaceContent(envelope, actions)
         } else actions
     } else null
 
     return if (finalActions == null) emptyList()
-    else generateSequence(finalActions)
+    else generateSequence(finalActions, options.keyboardLayout)
 }
 
-fun replaceContent(envelope: List<Action>?, content: List<Action>, key: String): List<Action> {
+fun replaceContent(envelope: List<Action>?, content: List<Action>): List<Action> {
     return if (envelope == null || envelope.isEmpty()) emptyList()
     else envelope.flatMap { action ->
-        val result = if (action.key == key) content
+        val result = if (action.key == Content) content
         else {
             if (action.children.isEmpty()) listOf(action)
             else {
-                val newChildren = replaceContent(action.children, content, key)
+                val newChildren = replaceContent(action.children, content)
                 if (newChildren == action.children) listOf(action)
                 else listOf(Action(action.key, newChildren))
             }
@@ -51,68 +58,34 @@ fun replaceContent(envelope: List<Action>?, content: List<Action>, key: String):
     }
 }
 
-fun generateSequence(actions: List<Action>): List<Pair<Int, Action.Do>> {
+fun generateSequence(actions: List<Action>, layout: KeyboardLayout): List<Pair<Int, Action.Do>> {
     return actions.flatMap { a ->
-        val (prefix, suffix) = mapActionToPrefixSuffix(a)
-        prefix + generateSequence(a.children) + suffix
+        val (prefix, suffix) = mapActionToAction(a, layout)
+        prefix + generateSequence(a.children, layout) + suffix
     }
 }
 
-fun mapActionToPrefixSuffix(action: Action): Pair<List<Pair<Int, Action.Do>>, List<Pair<Int, Action.Do>>> {
-
-    val fKeys = (1..24).map { i -> "F$i" }.toSet()
-    val special = mapOf(
-            Pair("ENTER",     VK_ENTER),
-            Pair("RETURN",    VK_ENTER),
-            Pair("BACKSPACE", VK_BACK_SPACE),
-            Pair("SPACE",     VK_SPACE),
-            Pair("CTRL",      VK_CONTROL),
-            Pair("SHIFT",     VK_SHIFT),
-            Pair("ALT",       VK_ALT),
-            Pair("ALTGR",     VK_ALT_GRAPH),
-            Pair("CONTEXT",   VK_CONTEXT_MENU),
-            Pair("WIN",       VK_META),
-            Pair("TAB",       VK_TAB)
-    )
-    val charKeys = mapOf(
-            Pair('\\', arrayOf(key('\\'))),
-            Pair('|',  arrayOf(VK_SHIFT, key('|'))),
-            Pair('/',  arrayOf(VK_SHIFT, key('/'))),
-            //Pair('?',  arrayOf()),
-            Pair('!',  arrayOf(VK_SHIFT, key('!'))),
-            Pair(' ',  arrayOf(key(' '))),
-            Pair('.',  arrayOf(key('.'))),
-            Pair(':',  arrayOf(VK_SHIFT, key(':'))),
-            Pair(';',  arrayOf(VK_SHIFT, key(';'))),
-            Pair('-',  arrayOf(key('-'))),
-            Pair('_',  arrayOf(VK_SHIFT, key('_'))),
-            Pair('@',  arrayOf(VK_SHIFT, key('@'))),
-            Pair('#',  arrayOf(VK_SHIFT, key('#'))),
-            Pair('^',  arrayOf(VK_SHIFT, key('^'))),
-            Pair('=',  arrayOf(key('='))),
-            Pair('+',  arrayOf(VK_SHIFT, key('+'))),
-            Pair('$',  arrayOf(VK_SHIFT, key('$'))),
-            Pair('&',  arrayOf(VK_SHIFT, key('&'))),
-            Pair('*',  arrayOf(VK_SHIFT, key('*'))),
-            Pair('\'', arrayOf(VK_QUOTE)),
-            Pair('"',  arrayOf(VK_SHIFT, VK_QUOTE)),
-            Pair('.',  arrayOf(key('.'))),
-            Pair('>',  arrayOf(VK_SHIFT, key('>'))),
-            Pair(',',  arrayOf(key(','))),
-            Pair('<',  arrayOf(VK_SHIFT, key('<'))),
-            Pair('(',  arrayOf(VK_SHIFT, key('('))),
-            Pair(')',  arrayOf(VK_SHIFT, key(')'))),
-            Pair('[',  arrayOf(key('['))),
-            Pair('{',  arrayOf(VK_SHIFT, key('{'))),
-            Pair(']',  arrayOf(key(']'))),
-            Pair('}',  arrayOf(VK_SHIFT, key('}'))),
-            Pair('%',  arrayOf(VK_SHIFT, key('%'))),
-            Pair('\t', arrayOf(VK_TAB)),
-            Pair('\n', arrayOf(VK_ENTER)),
-            Pair('\r', arrayOf(VK_ENTER))
-    )
+fun mapActionToAction(action: Action, layout: KeyboardLayout): List<Pair<Int, Action.Do>> {
 
     getExtendedKeyCodeForChar('$'.toInt())
+
+    val k = action.key
+    val actions: List<Action>? = when (k) {
+        is Exact -> {
+            layout.layout["" + k.char]
+        }
+        is Named -> {
+            layout.layout[k.name]
+        }
+        is Code -> {
+            listOf<Action>(Action(k, listOf()))
+        }
+        else -> {
+            listOf()
+        }
+    }
+
+    return null;
 
     return if (action.key.length == 1) {
         val c = action.key[0]
@@ -194,7 +167,6 @@ tailrec fun parseActions(s: String, offset: Int, actions: List<Action>, options:
 fun parseAction(s: String, offset: Int, options: Options): Pair<Int, Action> {
     val (next, key) = parseKey(s, offset, options)
     return when {
-        next >= s.length -> Pair(next, Action(key, emptyList()))
         options.allowNesting && s[next] == '(' -> {
             val (afterNested, nested) = parseNested(s, next, options)
             Pair(afterNested, Action(key, nested))
@@ -203,9 +175,9 @@ fun parseAction(s: String, offset: Int, options: Options): Pair<Int, Action> {
     }
 }
 
-fun parseKey(s: String, offset: Int, options: Options): Pair<Int, String> {
+fun parseKey(s: String, offset: Int, options: Options): Pair<Int, Key> {
     return if (options.allowSpecial && s[offset] == '{') {
-        val (next, key) = specialKey(s, offset)
+        val (next, key) = specialKey(s, offset, options)
         Pair(next, key)
     } else {
         val (next, key) = simpleKey(s, offset)
@@ -219,17 +191,25 @@ fun parseNested(s: String, offset: Int, options: Options): Pair<Int, List<Action
     else Pair(next + 1, actions)
 }
 
-fun specialKey(s: String, offset: Int): Pair<Int, String> {
+fun specialKey(s: String, offset: Int, options: Options): Pair<Int, Key> {
     val close = s.indexOf('}', offset + 1)
-    return if (close == -1) Pair(offset + 1, "{")
-    else Pair(close + 1, s.substring(offset + 1, close))
+    return if (close == -1) Pair(offset + 1, Exact('{'))
+    else {
+        val name = s.substring(offset + 1, close)
+        val key = when {
+            name == options.envelopeKey -> Content
+            name.all { c -> c.isDigit() } -> Code(name.toInt())
+            else -> Named(name)
+        }
+        Pair(close + 1, key)
+    }
 }
 
-fun simpleKey(s: String, offset: Int): Pair<Int, String> {
+fun simpleKey(s: String, offset: Int): Pair<Int, Key> {
     return when {
-        offset == s.length - 1 -> Pair(s.length, "" + s[offset])
-        s[offset] == '\\' -> Pair(offset + 2, "" + mapEscape(s[offset + 1]))
-        else -> Pair(offset + 1, "" + s[offset])
+        offset == s.length - 1 -> Pair(s.length, Exact(s[offset]))
+        s[offset] == '\\' -> Pair(offset + 2, Exact(mapEscape(s[offset + 1])))
+        else -> Pair(offset + 1, Exact(s[offset]))
     }
 }
 
