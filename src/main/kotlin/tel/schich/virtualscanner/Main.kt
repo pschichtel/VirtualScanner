@@ -13,19 +13,19 @@ import java.awt.datatransfer.*
 import java.awt.im.InputContext
 import java.awt.image.BufferedImage
 import java.lang.IllegalArgumentException
-import java.nio.file.Paths
 import java.util.*
 
 fun main(args: Array<String>) {
 
     InputContext.getInstance().selectInputMethod(Locale.ENGLISH)
 
-    if (args.size >= 3) {
+    if (args.size >= 4) {
         val mode = args[0].toLowerCase()
         val layoutFile = args[1]
-        val envelope = args[2]
+        val envelope = Pair(parseActionSpec(args[2]), parseActionSpec(args[3]))
 
-        val options = loadLayout(Paths.get(layoutFile), Options(envelope = envelope))
+        val layout = loadLayout(layoutFile) ?: mapOf()
+        val options = Options(envelope = envelope, keyboardLayout = layout)
         val robot = Robot()
 
         when(mode) {
@@ -138,8 +138,12 @@ fun handleResults(robot: Robot, options: Options, results: Array<Result>): Boole
             val code = result.text
             println("Found: >$code<")
             val actions = compile(code, options)
-            println(actions)
-            act(robot, actions)
+            if (actions == null) {
+                println("Failed to parse code! Is the keyboard layout incomplete?")
+            } else {
+                println(actions)
+                act(robot, actions)
+            }
         }
         true
     } else {
@@ -152,20 +156,20 @@ fun handleResults(robot: Robot, options: Options, results: Array<Result>): Boole
 //    return ImageIO.read(URL(url))
 //}
 
-fun act(r: Robot, actions: List<Pair<Int, Action.Do>>) {
-    for ((code, action) in actions) {
-        act(r, code, action)
+fun act(r: Robot, actions: List<Action>) {
+    for (action in actions) {
+        act(r, action)
         Thread.sleep(10)
     }
 }
 
-fun act(r: Robot, code: Int, action: Action.Do) {
+fun act(r: Robot, action: Action) {
     try {
-        when (action) {
-            Action.Do.Release -> r.keyRelease(code)
-            Action.Do.Press -> r.keyPress(code)
+        when (action.state) {
+            State.Release -> r.keyRelease(action.key)
+            State.Press -> r.keyPress(action.key)
         }
     } catch (e: IllegalArgumentException) {
-        throw RuntimeException("Unable to emit key stroke ($code, $action): ${e.message}", e)
+        throw RuntimeException("Unable to emit key stroke (${action.key}, ${action.state}): ${e.message}", e)
     }
 }
