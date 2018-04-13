@@ -6,11 +6,11 @@ Scan barcodes from your screen and emit the content as key strokes.
 ```
 seq := actions
 actions := action actions | EPSILON
-action := key nested?
-key := '{' SPECIAL_KEY '}' | SIMPLE_KEY
-nested := '(' actions ')'
-SPECIAL_KEY := 'ENTER', 'F1', 'F2', ...
-SIMPLE_KEY := 'a', 'b', ...
+action := key_down | key_up | key_press
+key_down := '+' code
+key_up := '-' code
+key_press := '~' code
+code := ('0'..'9')+
 ```
 
 ## Testing
