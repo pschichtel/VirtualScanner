@@ -5,32 +5,58 @@ import com.google.zxing.client.j2se.BufferedImageLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.multi.GenericMultipleBarcodeReader
 import com.google.zxing.multi.MultipleBarcodeReader
-import java.awt.GraphicsEnvironment
-import java.awt.Image
-import java.awt.Robot
-import java.awt.Toolkit
+import com.natpryce.konfig.*
+import com.natpryce.konfig.ConfigurationProperties.Companion.fromFile
+import com.natpryce.konfig.ConfigurationProperties.Companion.fromResource
+import com.natpryce.konfig.ConfigurationProperties.Companion.systemProperties
+import java.awt.*
 import java.awt.datatransfer.*
+import java.awt.event.KeyEvent
+import java.awt.event.KeyListener
 import java.awt.im.InputContext
 import java.awt.image.BufferedImage
+import java.io.File
 import java.lang.IllegalArgumentException
 import java.util.*
+import javax.swing.JFrame
+import javax.swing.JLabel
+import javax.swing.JPanel
+
+object options : PropertyGroup() {
+    val layout by stringType
+    val prefix by stringType
+    val suffix by stringType
+    val delay by intType
+    val charset by stringType
+}
 
 fun main(args: Array<String>) {
 
     InputContext.getInstance().selectInputMethod(Locale.ENGLISH)
 
-    if (args.size >= 4) {
+    if (args.isNotEmpty()) {
         val mode = args[0].toLowerCase()
-        val layoutFile = args[1]
-        val envelope = Pair(parseActionSpec(args[2]), parseActionSpec(args[3]))
 
-        val layout = loadLayout(layoutFile) ?: mapOf()
+
+        val base = systemProperties() overriding
+                EnvironmentVariables()
+
+        val conf = (if (args.size > 1) {
+            base overriding fromFile(File(args[1]))
+        } else base) overriding fromResource("defaults.properties")
+
+        val envelope = Pair(parseActionSpec(conf[options.prefix]), parseActionSpec(conf[options.suffix]))
+
+        val layout = loadLayout(conf[options.layout]) ?: mapOf()
+        val charset = conf[options.charset]
+        val delay = conf[options.delay]
         val options = Options(envelope = envelope, keyboardLayout = layout)
         val robot = Robot()
 
         when(mode) {
-            "screen" -> scanScreen(options, robot)
-            "clipboard" -> monitorClipboard(options, robot)
+            "screen" -> scanScreen(options, robot, delay)
+            "clipboard" -> monitorClipboard(options, robot, delay)
+            "layout" -> createLayout(charset)
             else -> {
                 System.err.println("available modes: screen, clipboard")
                 System.exit(1)
@@ -42,7 +68,39 @@ fun main(args: Array<String>) {
     }
 }
 
-fun monitorClipboard(options: Options, robot: Robot) {
+fun createLayout(charset: String) {
+    val frame = JFrame("Layout Creator")
+    frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+    frame.bounds = Rectangle(0, 0, 400, 400)
+    frame.setLocationRelativeTo(null)
+
+    frame.addKeyListener(object : KeyListener {
+        override fun keyTyped(e: KeyEvent?) {}
+
+        override fun keyPressed(e: KeyEvent?) {
+            println("+" + e?.keyCode)
+        }
+
+        override fun keyReleased(e: KeyEvent?) {
+            println("-" + e?.keyCode)
+        }
+    })
+
+    val layout = GridLayout(3, 3)
+    val panel = JPanel(layout)
+    val children = Array(layout.columns * layout.rows, { Panel() })
+    children.forEach { c -> panel.add(c) }
+
+    val label = JLabel()
+    label.font = Font.getFont("Verdana")
+    label.text = "A"
+    children[4].add(label)
+    frame.add(panel)
+
+    frame.isVisible = true
+}
+
+fun monitorClipboard(options: Options, robot: Robot, delay: Int) {
 
     Thread {
         val reader = reader()
@@ -108,7 +166,7 @@ fun reader(): (Image) -> Array<Result> {
     }
 }
 
-fun scanScreen(options: Options, robot: Robot) {
+fun scanScreen(options: Options, robot: Robot, delay: Int) {
     val graphicsEnv = GraphicsEnvironment.getLocalGraphicsEnvironment()
     val reader = reader()
 
