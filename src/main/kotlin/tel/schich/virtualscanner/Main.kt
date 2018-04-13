@@ -17,21 +17,15 @@ import java.util.*
 
 fun main(args: Array<String>) {
 
-    val inputContext = InputContext.getInstance()
-    val localeParts = (System.getenv("KB_LAYOUT_LOCALE") ?: "en_US_POSIX").split('_')
-    val locale = when {
-        localeParts.size == 1 -> Locale(localeParts[0])
-        localeParts.size == 2 -> Locale(localeParts[0], localeParts[1])
-        localeParts.size >= 3 -> Locale(localeParts[0], localeParts[1], localeParts[2])
-        else -> Locale("en", "US", "POSIX")
-    }
-    inputContext.selectInputMethod(locale)
+    InputContext.getInstance().selectInputMethod(Locale.ENGLISH)
 
-    if (args.size >= 2) {
+    if (args.size >= 4) {
         val mode = args[0].toLowerCase()
-        val envelope = args[1]
+        val layoutFile = args[1]
+        val envelope = Pair(parseActionSpec(args[2]), parseActionSpec(args[3]))
 
-        val options = Options(envelope = envelope)
+        val layout = loadLayout(layoutFile) ?: mapOf()
+        val options = Options(envelope = envelope, keyboardLayout = layout)
         val robot = Robot()
 
         when(mode) {
@@ -144,8 +138,12 @@ fun handleResults(robot: Robot, options: Options, results: Array<Result>): Boole
             val code = result.text
             println("Found: >$code<")
             val actions = compile(code, options)
-            println(actions)
-            act(robot, actions)
+            if (actions == null) {
+                println("Failed to parse code! Is the keyboard layout incomplete?")
+            } else {
+                println(actions)
+                act(robot, actions)
+            }
         }
         true
     } else {
@@ -158,20 +156,20 @@ fun handleResults(robot: Robot, options: Options, results: Array<Result>): Boole
 //    return ImageIO.read(URL(url))
 //}
 
-fun act(r: Robot, actions: List<Pair<Int, Action.Do>>) {
-    for ((code, action) in actions) {
-        act(r, code, action)
+fun act(r: Robot, actions: List<Action>) {
+    for (action in actions) {
+        act(r, action)
         Thread.sleep(10)
     }
 }
 
-fun act(r: Robot, code: Int, action: Action.Do) {
+fun act(r: Robot, action: Action) {
     try {
-        when (action) {
-            Action.Do.Release -> r.keyRelease(code)
-            Action.Do.Press -> r.keyPress(code)
+        when (action.state) {
+            State.Release -> r.keyRelease(action.key)
+            State.Press -> r.keyPress(action.key)
         }
     } catch (e: IllegalArgumentException) {
-        throw RuntimeException("Unable to emit key stroke ($code, $action): ${e.message}", e)
+        throw RuntimeException("Unable to emit key stroke (${action.key}, ${action.state}): ${e.message}", e)
     }
 }
