@@ -11,7 +11,7 @@
     <inceptionYear>2018</inceptionYear>
 
     <properties>
-        <kotlinVersion>1.2.31</kotlinVersion>
+        <kotlinVersion>1.2.40</kotlinVersion>
     </properties>
 
     <licenses>
@@ -27,26 +27,33 @@
         <tag>HEAD</tag>
     </scm>
 
+    <repositories>
+        <repository>
+            <id>jcenter</id>
+            <url>https://jcenter.bintray.com/</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
             <version>${kotlinVersion}</version>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-reflect</artifactId>
             <version>${kotlinVersion}</version>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>javase</artifactId>
             <version>3.3.2</version>
         </dependency>
         <dependency>
-            <groupId>com.natpryce</groupId>
-            <artifactId>konfig</artifactId>
-            <version>1.6.6.0</version>
+            <groupId>com.beust</groupId>
+            <artifactId>klaxon</artifactId>
+            <version>3.0.1</version>
         </dependency>
     </dependencies>
 

@@ -1,90 +1,96 @@
 package tel.schich.virtualscanner
 
+import com.beust.klaxon.Klaxon
 import com.google.zxing.*
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.multi.GenericMultipleBarcodeReader
 import com.google.zxing.multi.MultipleBarcodeReader
-import com.natpryce.konfig.*
-import com.natpryce.konfig.ConfigurationProperties.Companion.fromFile
-import com.natpryce.konfig.ConfigurationProperties.Companion.fromResource
-import com.natpryce.konfig.ConfigurationProperties.Companion.systemProperties
 import java.awt.*
 import java.awt.datatransfer.*
 import java.awt.event.KeyEvent
-import java.awt.event.KeyListener
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import java.awt.im.InputContext
 import java.awt.image.BufferedImage
 import java.io.File
 import java.lang.IllegalArgumentException
+import java.nio.file.Files.newBufferedWriter
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption.*
 import java.util.*
+import javax.swing.JButton
 import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JPanel
+import kotlin.text.Charsets.UTF_8
 
-object options : PropertyGroup() {
-    val layout by stringType
-    val prefix by stringType
-    val suffix by stringType
-    val delay by intType
-    val charset by stringType
-}
+data class Config(val layout: String = "de_DE_ISO.json",
+                  val prefix: String = "",
+                  val suffix: String = "",
+                  val delay: Int = 1000,
+                  val charset: String = "")
 
 fun main(args: Array<String>) {
 
     InputContext.getInstance().selectInputMethod(Locale.ENGLISH)
+    val mode = args.getOrElse(0, { "screen" }).toLowerCase()
 
-    if (args.isNotEmpty()) {
-        val mode = args[0].toLowerCase()
+    val confFile = File(args.getOrElse(1, {"configuration.json"}))
+    val json = Klaxon()
+    val config = if (confFile.canRead()) json.parse<Config>(confFile)
+    else json.parse<Config>(Thread.currentThread().contextClassLoader.getResourceAsStream("defaults.json"))
 
+    if (config == null) {
+        System.err.println("Unable to load configuration!")
+        System.exit(1)
+    } else {
 
-        val base = systemProperties() overriding
-                EnvironmentVariables()
+        val envelope = Pair(parseActionSpec(config.prefix), parseActionSpec(config.suffix))
 
-        val conf = (if (args.size > 1) {
-            base overriding fromFile(File(args[1]))
-        } else base) overriding fromResource("defaults.properties")
-
-        val envelope = Pair(parseActionSpec(conf[options.prefix]), parseActionSpec(conf[options.suffix]))
-
-        val layout = loadLayout(conf[options.layout]) ?: mapOf()
-        val charset = conf[options.charset]
-        val delay = conf[options.delay]
-        val options = Options(envelope = envelope, keyboardLayout = layout)
+        val layout = loadLayout(json, config.layout) ?: mapOf()
+        val typerOptions = Options(envelope = envelope, keyboardLayout = layout)
         val robot = Robot()
 
-        when(mode) {
-            "screen" -> scanScreen(options, robot, delay)
-            "clipboard" -> monitorClipboard(options, robot, delay)
-            "layout" -> createLayout(charset)
+        when (mode) {
+            "screen" -> scanScreen(typerOptions, robot, config.delay)
+            "clipboard" -> monitorClipboard(typerOptions, robot, config.delay)
+            "layout" -> createLayout(json, config.charset, config.layout)
             else -> {
                 System.err.println("available modes: screen, clipboard")
                 System.exit(1)
             }
         }
-    } else {
-        System.err.println("usage: screen|clipboard <envelope> ....")
-        System.exit(1)
     }
 }
 
-fun createLayout(charset: String) {
+fun createLayout(json: Klaxon, charset: String, filePath: String) {
+    System.setProperty("awt.useSystemAAFontSettings","on")
+    System.setProperty("swing.aatext", "true")
+
     val frame = JFrame("Layout Creator")
     frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
     frame.bounds = Rectangle(0, 0, 400, 400)
     frame.setLocationRelativeTo(null)
 
-    frame.addKeyListener(object : KeyListener {
-        override fun keyTyped(e: KeyEvent?) {}
+    val charKeyTable = mutableMapOf<Char, List<Action>>()
+    val currentRecording = mutableListOf<Action>()
+    val currentlyPressed = mutableSetOf<Int>()
 
-        override fun keyPressed(e: KeyEvent?) {
-            println("+" + e?.keyCode)
-        }
+    KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher { e ->
+        if (e.id == KeyEvent.KEY_PRESSED && !currentlyPressed.contains(e.keyCode) || e.id == KeyEvent.KEY_RELEASED) {
+            val state = if (e.id == KeyEvent.KEY_PRESSED) {
+                currentlyPressed.add(e.keyCode)
+                State.Press
+            } else {
+                currentlyPressed.remove(e.keyCode)
+                State.Release
+            }
 
-        override fun keyReleased(e: KeyEvent?) {
-            println("-" + e?.keyCode)
+            currentRecording.add(Action(e.keyCode, state))
         }
-    })
+        false
+    }
 
     val layout = GridLayout(3, 3)
     val panel = JPanel(layout)
@@ -92,12 +98,61 @@ fun createLayout(charset: String) {
     children.forEach { c -> panel.add(c) }
 
     val label = JLabel()
-    label.font = Font.getFont("Verdana")
-    label.text = "A"
-    children[4].add(label)
-    frame.add(panel)
 
+    var charsetPosition = 0
+    var currentChar: Char = charset[charsetPosition]
+
+    label.font = Font("Verdana", Font.BOLD, 40)
+    label.text = stringifyChar(currentChar)
+    children[4].add(label)
+
+    val resetButton = JButton()
+    resetButton.text = "Reset"
+    resetButton.addMouseListener(object : MouseAdapter() {
+        override fun mouseClicked(e: MouseEvent?) {
+            if (e?.button == MouseEvent.BUTTON1) {
+                currentRecording.clear()
+            }
+        }
+    })
+    children[6].add(resetButton)
+
+    val nextButton = JButton()
+    nextButton.text = "Next"
+    nextButton.addMouseListener(object : MouseAdapter() {
+        override fun mouseClicked(e: MouseEvent?) {
+            if (e?.button == MouseEvent.BUTTON1) {
+                charsetPosition++
+                charKeyTable[currentChar] = currentRecording.toList()
+                currentRecording.clear()
+
+                if (charsetPosition >= charset.length) {
+                    frame.dispose()
+                    println(charKeyTable)
+                    generateLayoutFile(json, filePath, charKeyTable)
+                } else {
+                    currentChar = charset[charsetPosition]
+                    label.text = stringifyChar(currentChar)
+                    if (charsetPosition + 1 >= charset.length) {
+                        nextButton.text = "Complete"
+                    }
+                }
+            }
+        }
+    })
+    children[8].add(nextButton)
+
+    frame.add(panel)
     frame.isVisible = true
+}
+
+fun stringifyChar(c: Char): String {
+    return when (c) {
+        '\n' -> "Linebreak"
+        '\t' -> "Tab"
+        ' ' -> "Space"
+        else -> c.toString()
+    }
 }
 
 fun monitorClipboard(options: Options, robot: Robot, delay: Int) {
@@ -230,4 +285,31 @@ fun act(r: Robot, action: Action) {
     } catch (e: IllegalArgumentException) {
         throw RuntimeException("Unable to emit key stroke (${action.key}, ${action.state}): ${e.message}", e)
     }
+}
+
+fun generateLayoutFile(json: Klaxon, path: String, table: Map<Char, List<Action>>) {
+
+    fun stateChar(state: State): Char {
+        return when (state) {
+            State.Press -> '+'
+            State.Release -> '-'
+        }
+    }
+
+    fun normalizeActions(input: List<Action>, i: Int = 0, output: List<Pair<Int, Char>> = listOf()): List<Pair<Int, Char>> {
+        return if (i >= input.size) output
+        else {
+            if (i + 1 < input.size && input[i].key == input[i + 1].key && input[i].state == State.Press && input[i + 1].state == State.Release) {
+                normalizeActions(input, i + 2, output + Pair(input[i].key, '~'))
+            } else {
+                normalizeActions(input, i + 1, output + Pair(input[i].key, stateChar(input[i].state)))
+            }
+        }
+    }
+
+    val layoutMap = table.map { (k, v) -> Pair("$k", normalizeActions(v).map { (c, s) -> "$s$c"}.joinToString("")) }.toMap()
+
+    val writer = newBufferedWriter(Paths.get(path), UTF_8, WRITE, SYNC, DSYNC, TRUNCATE_EXISTING, CREATE)
+    writer.write(json.toJsonString(layoutMap))
+    writer.close()
 }

@@ -1,0 +1,9 @@
+{
+    "layout": "de_DE_ISO.json",
+    "prefix": "~115",
+    "suffix": "~10",
+    "delay": 1000,
+    "charset": "abc \n\t\\",
+    "_charset": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"§$%&/()=?,.-;:_#'+*~<>|{[]}\\\n\t "
+}
+

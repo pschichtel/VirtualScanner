@@ -1,27 +1,17 @@
 package tel.schich.virtualscanner
 
-import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.lang.Thread.currentThread
+import com.beust.klaxon.Klaxon
+import java.io.File
 
-fun loadLayout(file: String): Map<Char, List<Action>>? {
-    val path = Paths.get(file)
+fun loadLayout(json: Klaxon, path: String): Map<Char, List<Action>>? {
 
-    val lines = when {
-        Files.isReadable(path) -> Files.readAllLines(path, UTF_8)
-        else -> currentThread().contextClassLoader.getResourceAsStream(file)?.bufferedReader(UTF_8)?.readLines()
+    val file = File(path)
+    return if (!file.canRead()) null
+    else {
+        val layoutMap = json.parse<Map<String, List<Action>>>(file)
+        layoutMap?.map { (k, v) -> Pair(k.first(), v) }?.toMap()
     }
-    return lines?.fold(mapOf())  { mapping, line ->
-        val trimmed = line.trim()
-        val sepPos = trimmed.indexOf('=', 1)
-        if (sepPos != 1) mapping
-        else {
-            val key = trimmed[0]
-            val actions = parseActionSpec(trimmed.substring(sepPos + 1))
-            mapping + Pair(key, actions)
-        }
-    }
+
 }
 
 fun parseActionSpec(spec: String): List<Action> {
