@@ -20,6 +20,9 @@ import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
 import java.lang.IllegalArgumentException
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 import java.util.*
 import javax.swing.JButton
 import javax.swing.JFrame
@@ -38,33 +41,22 @@ fun main(args: Array<String>) {
     InputContext.getInstance().selectInputMethod(Locale.ENGLISH)
     val mode = args.getOrElse(0, { "screen" }).toLowerCase()
 
-    val confFile = File(args.getOrElse(1, {"configuration.json"}))
     val json = jacksonObjectMapper()
-    json.enable(SerializationFeature.FLUSH_AFTER_WRITE_VALUE)
-    json.enable(SerializationFeature.INDENT_OUTPUT)
+        .enable(SerializationFeature.FLUSH_AFTER_WRITE_VALUE)
+        .enable(SerializationFeature.INDENT_OUTPUT)
 
-    val config: Config? = if (confFile.canRead()) read(json, confFile)
-    else read(json, Thread.currentThread().contextClassLoader.getResourceAsStream("defaults.json"))
+    val config = load(json, listOf(args.getOrElse(1, {"config.json"}), "defaults.json"), Config())
+    val layout = load(json, listOf(config.layout, "default-layout.json"), mapOf<Char, List<Action>>())
+    val options = Options(envelope = Pair(config.prefix, config.suffix), keyboardLayout = layout)
+    val robot = Robot()
 
-    if (config == null) {
-        System.err.println("Unable to load configuration!")
-        System.exit(1)
-    } else {
-
-        val envelope = Pair(config.prefix, config.suffix)
-
-        val layout = loadLayout(json, config.layout) ?: mapOf()
-        val typerOptions = Options(envelope = envelope, keyboardLayout = layout)
-        val robot = Robot()
-
-        when (mode) {
-            "screen" -> scanScreen(typerOptions, robot, config.delay)
-            "clipboard" -> monitorClipboard(typerOptions, robot, config.delay)
-            "layout" -> createLayout(json, config.charset, config.layout)
-            else -> {
-                System.err.println("available modes: screen, clipboard, layout")
-                System.exit(1)
-            }
+    when (mode) {
+        "screen" -> scanScreen(options, robot, config.delay)
+        "clipboard" -> monitorClipboard(options, robot, config.delay)
+        "layout" -> createLayout(json, config.charset, config.layout)
+        else -> {
+            System.err.println("available modes: screen, clipboard, layout")
+            System.exit(1)
         }
     }
 }
@@ -296,20 +288,50 @@ fun act(r: Robot, action: Action) {
     }
 }
 
+inline fun <reified T : Any> load(json: ObjectMapper, paths: List<String>, default: T): T {
+    return paths.fold(default, { acc, path ->
+        if (acc == default) load(json, path, default)
+        else default
+    })
+}
+
+inline fun <reified T : Any> load(json: ObjectMapper, path: String, default: T): T {
+    val fromFile = read<T>(json, File(path))
+    if (fromFile != null) {
+        return fromFile
+    }
+
+    val fromJar = read<T>(json, Thread.currentThread().contextClassLoader.getResourceAsStream(path))
+    if (fromJar != null) {
+        return fromJar
+    }
+
+    return default
+}
+
 inline fun <reified T : Any> read(json: ObjectMapper, file: File): T? {
-    return try {
-        json.readValue(file)
+    return if (!file.canRead()) null
+    else try {
+        json.readValue<T>(file)
     } catch (ex: Exception) {
         ex.printStackTrace(System.err)
         null
     }
 }
 
-inline fun <reified T : Any> read(json: ObjectMapper, inStream: InputStream): T? {
-    return try {
-        json.readValue(inStream)
+inline fun <reified T : Any> read(json: ObjectMapper, inStream: InputStream?): T? {
+    return if (inStream == null) null
+    else try {
+        json.readValue<T>(inStream)
     } catch (ex: Exception) {
         ex.printStackTrace(System.err)
         null
+    }
+}
+
+fun generateLayoutFile(json: ObjectMapper, path: String, table: Map<Char, List<Action>>) {
+    val writer = Files.newBufferedWriter(Paths.get(path), Charsets.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.SYNC, StandardOpenOption.DSYNC, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)
+    writer.use {
+        json.writeValue(it, table)
     }
 }

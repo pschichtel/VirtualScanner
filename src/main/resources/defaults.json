@@ -1,12 +1,12 @@
 {
     "layout": "de_DE_ISO.json",
     "prefix": [
-        {"code": 115, "state": "Pressed"},
-        {"code": 115, "state": "Released"}
+        {"key": 115, "state": "Pressed"},
+        {"key": 115, "state": "Released"}
     ],
     "suffix": [
-        {"code": 10, "state": "Pressed"},
-        {"code": 10, "state": "Released"}
+        {"key": 10, "state": "Pressed"},
+        {"key": 10, "state": "Released"}
     ],
     "delay": 1000,
     "charset": "abc \n\t\\",
