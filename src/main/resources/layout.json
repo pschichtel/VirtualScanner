@@ -962,6 +962,13 @@
     "key" : 10,
     "state" : "Released"
   } ],
+  "\r" : [ {
+    "key" : 10,
+    "state" : "Pressed"
+  }, {
+    "key" : 10,
+    "state" : "Released"
+  } ],
   "\t" : [ {
     "key" : 9,
     "state" : "Pressed"
@@ -974,6 +981,45 @@
     "state" : "Pressed"
   }, {
     "key" : 32,
+    "state" : "Released"
+  } ],
+  "@" : [ {
+    "key" : 65406,
+    "state" : "Pressed"
+  }, {
+    "key" : 81,
+    "state" : "Pressed"
+  }, {
+    "key" : 81,
+    "state" : "Released"
+  }, {
+    "key" : 65406,
+    "state" : "Released"
+  } ],
+  "€" : [ {
+    "key" : 65406,
+    "state" : "Pressed"
+  }, {
+    "key" : 69,
+    "state" : "Pressed"
+  }, {
+    "key" : 69,
+    "state" : "Released"
+  }, {
+    "key" : 65406,
+    "state" : "Released"
+  } ],
+  "µ" : [ {
+    "key" : 65406,
+    "state" : "Pressed"
+  }, {
+    "key" : 77,
+    "state" : "Pressed"
+  }, {
+    "key" : 77,
+    "state" : "Released"
+  }, {
+    "key" : 65406,
     "state" : "Released"
   } ]
 }

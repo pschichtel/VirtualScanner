@@ -177,7 +177,8 @@ fun clickHandler(button: Int, f: (MouseEvent) -> Unit): MouseListener {
 
 fun stringifyChar(c: Char): String {
     return when (c) {
-        '\n', '\r' -> "Linebreak"
+        '\n' -> "Linefeed"
+        '\r' -> "Carriage Return"
         '\t' -> "Tab"
         ' ' -> "Space"
         else -> c.toString()

@@ -10,6 +10,6 @@
         {"key": 10, "state": "Released"}
     ],
     "delay": 1000,
-    "charset": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"§$%&/()=?,.-;:_#'+*~<>|{[]}\\\n\t "
+    "charset": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"§$%&/()=?,.-;:_#'+*~<>|{[]}\\\n\r\t @€µ"
 }
 

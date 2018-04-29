@@ -11,9 +11,16 @@ data class Options(val normalizeLinebreaks: Boolean = true,
 
 fun compile(input: String, options: Options): List<Action>? {
 
-    return if (input.any { c -> !options.keyboardLayout.containsKey(c) }) null
-    else {
-        val raw = input.flatMap { c -> options.keyboardLayout[c] ?: listOf() }
+    val processedInput =
+            if (options.normalizeLinebreaks) input.replace("(\r\n|\r)".toRegex(), "\n")
+            else input
+
+    val missingMappings = processedInput.filter { c -> !options.keyboardLayout.containsKey(c) }.toSet()
+    return if (missingMappings.isNotEmpty()) {
+        println("Missing character mappings: $missingMappings")
+        null
+    } else {
+        val raw = processedInput.flatMap { c -> options.keyboardLayout[c] ?: listOf() }
         if (options.envelope == null) raw
         else options.envelope.first + raw + options.envelope.second
     }
