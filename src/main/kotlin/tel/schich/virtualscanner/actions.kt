@@ -1,6 +1,6 @@
 package tel.schich.virtualscanner
 
-enum class State { Release, Press }
+enum class State { Released, Pressed }
 
 data class Action(val key: Int, val state: State)
 

@@ -1,7 +1,13 @@
 {
     "layout": "de_DE_ISO.json",
-    "prefix": "~115",
-    "suffix": "~10",
+    "prefix": [
+        {"code": 115, "state": "Pressed"},
+        {"code": 115, "state": "Released"}
+    ],
+    "suffix": [
+        {"code": 10, "state": "Pressed"},
+        {"code": 10, "state": "Released"}
+    ],
     "delay": 1000,
     "charset": "abc \n\t\\",
     "_charset": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"§$%&/()=?,.-;:_#'+*~<>|{[]}\\\n\t "

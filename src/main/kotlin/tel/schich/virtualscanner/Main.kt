@@ -1,6 +1,10 @@
 package tel.schich.virtualscanner
 
-import com.beust.klaxon.Klaxon
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.zxing.*
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource
 import com.google.zxing.common.HybridBinarizer
@@ -14,21 +18,19 @@ import java.awt.event.MouseEvent
 import java.awt.im.InputContext
 import java.awt.image.BufferedImage
 import java.io.File
+import java.io.InputStream
 import java.lang.IllegalArgumentException
-import java.nio.file.Files.newBufferedWriter
-import java.nio.file.Paths
-import java.nio.file.StandardOpenOption.*
 import java.util.*
 import javax.swing.JButton
 import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JPanel
-import kotlin.text.Charsets.UTF_8
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class Config(val layout: String = "de_DE_ISO.json",
-                  val prefix: String = "",
-                  val suffix: String = "",
-                  val delay: Int = 1000,
+                  val prefix: List<Action> = listOf(),
+                  val suffix: List<Action> = listOf(),
+                  val delay: Long = 1000,
                   val charset: String = "")
 
 fun main(args: Array<String>) {
@@ -37,16 +39,19 @@ fun main(args: Array<String>) {
     val mode = args.getOrElse(0, { "screen" }).toLowerCase()
 
     val confFile = File(args.getOrElse(1, {"configuration.json"}))
-    val json = Klaxon()
-    val config = if (confFile.canRead()) json.parse<Config>(confFile)
-    else json.parse<Config>(Thread.currentThread().contextClassLoader.getResourceAsStream("defaults.json"))
+    val json = jacksonObjectMapper()
+    json.enable(SerializationFeature.FLUSH_AFTER_WRITE_VALUE)
+    json.enable(SerializationFeature.INDENT_OUTPUT)
+
+    val config: Config? = if (confFile.canRead()) read(json, confFile)
+    else read(json, Thread.currentThread().contextClassLoader.getResourceAsStream("defaults.json"))
 
     if (config == null) {
         System.err.println("Unable to load configuration!")
         System.exit(1)
     } else {
 
-        val envelope = Pair(parseActionSpec(config.prefix), parseActionSpec(config.suffix))
+        val envelope = Pair(config.prefix, config.suffix)
 
         val layout = loadLayout(json, config.layout) ?: mapOf()
         val typerOptions = Options(envelope = envelope, keyboardLayout = layout)
@@ -57,14 +62,14 @@ fun main(args: Array<String>) {
             "clipboard" -> monitorClipboard(typerOptions, robot, config.delay)
             "layout" -> createLayout(json, config.charset, config.layout)
             else -> {
-                System.err.println("available modes: screen, clipboard")
+                System.err.println("available modes: screen, clipboard, layout")
                 System.exit(1)
             }
         }
     }
 }
 
-fun createLayout(json: Klaxon, charset: String, filePath: String) {
+fun createLayout(json: ObjectMapper, charset: String, filePath: String) {
     System.setProperty("awt.useSystemAAFontSettings","on")
     System.setProperty("swing.aatext", "true")
 
@@ -81,10 +86,10 @@ fun createLayout(json: Klaxon, charset: String, filePath: String) {
         if (e.id == KeyEvent.KEY_PRESSED && !currentlyPressed.contains(e.keyCode) || e.id == KeyEvent.KEY_RELEASED) {
             val state = if (e.id == KeyEvent.KEY_PRESSED) {
                 currentlyPressed.add(e.keyCode)
-                State.Press
+                State.Pressed
             } else {
                 currentlyPressed.remove(e.keyCode)
-                State.Release
+                State.Released
             }
 
             currentRecording.add(Action(e.keyCode, state))
@@ -155,7 +160,7 @@ fun stringifyChar(c: Char): String {
     }
 }
 
-fun monitorClipboard(options: Options, robot: Robot, delay: Int) {
+fun monitorClipboard(options: Options, robot: Robot, delay: Long) {
 
     Thread {
         val reader = reader()
@@ -167,7 +172,7 @@ fun monitorClipboard(options: Options, robot: Robot, delay: Int) {
                 val contents = sysClipboard.getContents(null)
                 if (contents.isDataFlavorSupported(DataFlavor.imageFlavor)) {
                     val image = contents.getTransferData(DataFlavor.imageFlavor) as Image
-                    handleResults(robot, options, reader(image))
+                    handleResults(robot, options, reader(image), delay)
                 }
                 sysClipboard.setContents(sysClipboard.getContents(null), this)
             }
@@ -181,11 +186,14 @@ fun monitorClipboard(options: Options, robot: Robot, delay: Int) {
         sysClipboard.addFlavorListener(owner)
     }.start()
 
+    halt()
+}
+
+fun halt() {
     Thread {
         // keep us alive.
         Thread.currentThread().join()
     }.start()
-
 }
 
 fun reader(): (Image) -> Array<Result> {
@@ -221,7 +229,7 @@ fun reader(): (Image) -> Array<Result> {
     }
 }
 
-fun scanScreen(options: Options, robot: Robot, delay: Int) {
+fun scanScreen(options: Options, robot: Robot, delay: Long) {
     val graphicsEnv = GraphicsEnvironment.getLocalGraphicsEnvironment()
     val reader = reader()
 
@@ -240,12 +248,12 @@ fun scanScreen(options: Options, robot: Robot, delay: Int) {
 //        Thread.sleep(2000)
 //        window.dispose()
 
-        handleResults(robot, options, reader(monitorScreen))
+        handleResults(robot, options, reader(monitorScreen), delay)
 
     }
 }
 
-fun handleResults(robot: Robot, options: Options, results: Array<Result>): Boolean {
+fun handleResults(robot: Robot, options: Options, results: Array<Result>, delay: Long): Boolean {
     return if (results.isNotEmpty()) {
         for (result in results) {
             val code = result.text
@@ -255,6 +263,7 @@ fun handleResults(robot: Robot, options: Options, results: Array<Result>): Boole
                 println("Failed to parse code! Is the keyboard layout incomplete?")
             } else {
                 println(actions)
+                Thread.sleep(delay)
                 act(robot, actions)
             }
         }
@@ -279,37 +288,28 @@ fun act(r: Robot, actions: List<Action>) {
 fun act(r: Robot, action: Action) {
     try {
         when (action.state) {
-            State.Release -> r.keyRelease(action.key)
-            State.Press -> r.keyPress(action.key)
+            State.Released -> r.keyRelease(action.key)
+            State.Pressed -> r.keyPress(action.key)
         }
     } catch (e: IllegalArgumentException) {
         throw RuntimeException("Unable to emit key stroke (${action.key}, ${action.state}): ${e.message}", e)
     }
 }
 
-fun generateLayoutFile(json: Klaxon, path: String, table: Map<Char, List<Action>>) {
-
-    fun stateChar(state: State): Char {
-        return when (state) {
-            State.Press -> '+'
-            State.Release -> '-'
-        }
+inline fun <reified T : Any> read(json: ObjectMapper, file: File): T? {
+    return try {
+        json.readValue(file)
+    } catch (ex: Exception) {
+        ex.printStackTrace(System.err)
+        null
     }
+}
 
-    fun normalizeActions(input: List<Action>, i: Int = 0, output: List<Pair<Int, Char>> = listOf()): List<Pair<Int, Char>> {
-        return if (i >= input.size) output
-        else {
-            if (i + 1 < input.size && input[i].key == input[i + 1].key && input[i].state == State.Press && input[i + 1].state == State.Release) {
-                normalizeActions(input, i + 2, output + Pair(input[i].key, '~'))
-            } else {
-                normalizeActions(input, i + 1, output + Pair(input[i].key, stateChar(input[i].state)))
-            }
-        }
+inline fun <reified T : Any> read(json: ObjectMapper, inStream: InputStream): T? {
+    return try {
+        json.readValue(inStream)
+    } catch (ex: Exception) {
+        ex.printStackTrace(System.err)
+        null
     }
-
-    val layoutMap = table.map { (k, v) -> Pair("$k", normalizeActions(v).map { (c, s) -> "$s$c"}.joinToString("")) }.toMap()
-
-    val writer = newBufferedWriter(Paths.get(path), UTF_8, WRITE, SYNC, DSYNC, TRUNCATE_EXISTING, CREATE)
-    writer.write(json.toJsonString(layoutMap))
-    writer.close()
 }
