@@ -28,11 +28,11 @@ A file called config.json is loaded from the working directory which configures 
 ```
 If the file is not found, defaults will be loaded: [Default config.json on Github](https://github.com/pschichtel/VirtualScanner/blob/master/src/main/resources/config.json).
 
-* `layout`: the layout file to load (the file layout.json will be loaded internally with defaults, if it does not exist)
-* `normalizeLinebreaks`: Whether to normalize the linebreaks to `\n`
-* `prefix`: The key actions to generate *before* the barcode content
-* `suffix`: The key actions to generate *after* the barcode content
-* `delay`: The delay before the tool starts producing key events after detecting the barcode in milliseconds
+* `layout`: The layout file to map characters to keys on the keyboard. (the file layout.json will be loaded internally with defaults, if it does not exist)
+* `normalizeLinebreaks`: Whether to normalize the linebreaks to `\n`.
+* `prefix`: The key actions to generate *before* the barcode content.
+* `suffix`: The key actions to generate *after* the barcode content.
+* `delay`: The delay before the tool starts producing key events after detecting the barcode in milliseconds.
 * `charset`: The characters to map in the layout file, used by the `layout`.
  
 ### Download
