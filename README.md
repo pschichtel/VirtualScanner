@@ -34,7 +34,9 @@ A file called config.json is loaded from the working directory which configures 
 * `delay`: The delay before the tool starts producing key events after detecting the barcode in milliseconds
 * `charset`: The characters to map in the layout file, used by the `layout`.
  
+### Download
 
+Get the tool from [Github](https://github.com/pschichtel/VirtualScanner/releases/latest)!
 
 ## Action Sequence Syntax
 
