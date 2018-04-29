@@ -40,7 +40,11 @@ If the file is not found, defaults will be loaded: [Default config.json on Githu
  
 ### Download
 
-Get the tool from [Github](https://github.com/pschichtel/VirtualScanner/releases/latest)!
+Get the tool from the latest release on [Github](https://github.com/pschichtel/VirtualScanner/releases/latest)!
+
+### Building
+
+It is a standard Maven project that does not require any special configuration given a working Maven installation. `mvn clean package` should build an executable jar into the target folder.
 
 ## Action Sequence Syntax
 
