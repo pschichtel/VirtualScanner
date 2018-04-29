@@ -4,7 +4,7 @@ enum class State { Released, Pressed }
 
 data class Action(val key: Int, val state: State)
 
-data class Options(val normalizeLineBreaks: Boolean = true,
+data class Options(val normalizeLinebreaks: Boolean = true,
                    val envelope: Pair<List<Action>, List<Action>>? = null,
                    val keyboardLayout: Map<Char, List<Action>>)
 

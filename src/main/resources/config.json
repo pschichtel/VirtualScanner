@@ -1,5 +1,6 @@
 {
-    "layout": "de_DE_ISO.json",
+    "layout": "layout.json",
+    "normalizeLinebreaks": true,
     "prefix": [
         {"key": 115, "state": "Pressed"},
         {"key": 115, "state": "Released"}
@@ -9,7 +10,6 @@
         {"key": 10, "state": "Released"}
     ],
     "delay": 1000,
-    "charset": "abc \n\t\\",
-    "_charset": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"§$%&/()=?,.-;:_#'+*~<>|{[]}\\\n\t "
+    "charset": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"§$%&/()=?,.-;:_#'+*~<>|{[]}\\\n\t "
 }
 

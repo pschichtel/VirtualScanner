@@ -1,0 +1,979 @@
+{
+  "a" : [ {
+    "key" : 65,
+    "state" : "Pressed"
+  }, {
+    "key" : 65,
+    "state" : "Released"
+  } ],
+  "b" : [ {
+    "key" : 66,
+    "state" : "Pressed"
+  }, {
+    "key" : 66,
+    "state" : "Released"
+  } ],
+  "c" : [ {
+    "key" : 67,
+    "state" : "Pressed"
+  }, {
+    "key" : 67,
+    "state" : "Released"
+  } ],
+  "d" : [ {
+    "key" : 68,
+    "state" : "Pressed"
+  }, {
+    "key" : 68,
+    "state" : "Released"
+  } ],
+  "e" : [ {
+    "key" : 69,
+    "state" : "Pressed"
+  }, {
+    "key" : 69,
+    "state" : "Released"
+  } ],
+  "f" : [ {
+    "key" : 70,
+    "state" : "Pressed"
+  }, {
+    "key" : 70,
+    "state" : "Released"
+  } ],
+  "g" : [ {
+    "key" : 71,
+    "state" : "Pressed"
+  }, {
+    "key" : 71,
+    "state" : "Released"
+  } ],
+  "h" : [ {
+    "key" : 72,
+    "state" : "Pressed"
+  }, {
+    "key" : 72,
+    "state" : "Released"
+  } ],
+  "i" : [ {
+    "key" : 73,
+    "state" : "Pressed"
+  }, {
+    "key" : 73,
+    "state" : "Released"
+  } ],
+  "j" : [ {
+    "key" : 74,
+    "state" : "Pressed"
+  }, {
+    "key" : 74,
+    "state" : "Released"
+  } ],
+  "k" : [ {
+    "key" : 75,
+    "state" : "Pressed"
+  }, {
+    "key" : 75,
+    "state" : "Released"
+  } ],
+  "l" : [ {
+    "key" : 76,
+    "state" : "Pressed"
+  }, {
+    "key" : 76,
+    "state" : "Released"
+  } ],
+  "m" : [ {
+    "key" : 77,
+    "state" : "Pressed"
+  }, {
+    "key" : 77,
+    "state" : "Released"
+  } ],
+  "n" : [ {
+    "key" : 78,
+    "state" : "Pressed"
+  }, {
+    "key" : 78,
+    "state" : "Released"
+  } ],
+  "o" : [ {
+    "key" : 79,
+    "state" : "Pressed"
+  }, {
+    "key" : 79,
+    "state" : "Released"
+  } ],
+  "p" : [ {
+    "key" : 80,
+    "state" : "Pressed"
+  }, {
+    "key" : 80,
+    "state" : "Released"
+  } ],
+  "q" : [ {
+    "key" : 81,
+    "state" : "Pressed"
+  }, {
+    "key" : 81,
+    "state" : "Released"
+  } ],
+  "r" : [ {
+    "key" : 82,
+    "state" : "Pressed"
+  }, {
+    "key" : 82,
+    "state" : "Released"
+  } ],
+  "s" : [ {
+    "key" : 83,
+    "state" : "Pressed"
+  }, {
+    "key" : 83,
+    "state" : "Released"
+  } ],
+  "t" : [ {
+    "key" : 84,
+    "state" : "Pressed"
+  }, {
+    "key" : 84,
+    "state" : "Released"
+  } ],
+  "u" : [ {
+    "key" : 85,
+    "state" : "Pressed"
+  }, {
+    "key" : 85,
+    "state" : "Released"
+  } ],
+  "v" : [ {
+    "key" : 86,
+    "state" : "Pressed"
+  }, {
+    "key" : 86,
+    "state" : "Released"
+  } ],
+  "w" : [ {
+    "key" : 87,
+    "state" : "Pressed"
+  }, {
+    "key" : 87,
+    "state" : "Released"
+  } ],
+  "x" : [ {
+    "key" : 88,
+    "state" : "Pressed"
+  }, {
+    "key" : 88,
+    "state" : "Released"
+  } ],
+  "y" : [ {
+    "key" : 89,
+    "state" : "Pressed"
+  }, {
+    "key" : 89,
+    "state" : "Released"
+  } ],
+  "z" : [ {
+    "key" : 90,
+    "state" : "Pressed"
+  }, {
+    "key" : 90,
+    "state" : "Released"
+  } ],
+  "A" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 65,
+    "state" : "Pressed"
+  }, {
+    "key" : 65,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "B" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 66,
+    "state" : "Pressed"
+  }, {
+    "key" : 66,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "C" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 67,
+    "state" : "Pressed"
+  }, {
+    "key" : 67,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "D" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 68,
+    "state" : "Pressed"
+  }, {
+    "key" : 68,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "E" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 69,
+    "state" : "Pressed"
+  }, {
+    "key" : 69,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "F" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 70,
+    "state" : "Pressed"
+  }, {
+    "key" : 70,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "G" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 71,
+    "state" : "Pressed"
+  }, {
+    "key" : 71,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "H" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 72,
+    "state" : "Pressed"
+  }, {
+    "key" : 72,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "I" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 73,
+    "state" : "Pressed"
+  }, {
+    "key" : 73,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "J" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 74,
+    "state" : "Pressed"
+  }, {
+    "key" : 74,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "K" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 75,
+    "state" : "Pressed"
+  }, {
+    "key" : 75,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "L" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 76,
+    "state" : "Pressed"
+  }, {
+    "key" : 76,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "M" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 77,
+    "state" : "Pressed"
+  }, {
+    "key" : 77,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "N" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 78,
+    "state" : "Pressed"
+  }, {
+    "key" : 78,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "O" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 79,
+    "state" : "Pressed"
+  }, {
+    "key" : 79,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "P" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 80,
+    "state" : "Pressed"
+  }, {
+    "key" : 80,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "Q" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 81,
+    "state" : "Pressed"
+  }, {
+    "key" : 81,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "R" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 82,
+    "state" : "Pressed"
+  }, {
+    "key" : 82,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "S" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 83,
+    "state" : "Pressed"
+  }, {
+    "key" : 83,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "T" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 84,
+    "state" : "Pressed"
+  }, {
+    "key" : 84,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "U" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 85,
+    "state" : "Pressed"
+  }, {
+    "key" : 85,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "V" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 86,
+    "state" : "Pressed"
+  }, {
+    "key" : 86,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "W" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 87,
+    "state" : "Pressed"
+  }, {
+    "key" : 87,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "X" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 88,
+    "state" : "Pressed"
+  }, {
+    "key" : 88,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "Y" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 89,
+    "state" : "Pressed"
+  }, {
+    "key" : 89,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "Z" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 90,
+    "state" : "Pressed"
+  }, {
+    "key" : 90,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "0" : [ {
+    "key" : 48,
+    "state" : "Pressed"
+  }, {
+    "key" : 48,
+    "state" : "Released"
+  } ],
+  "1" : [ {
+    "key" : 49,
+    "state" : "Pressed"
+  }, {
+    "key" : 49,
+    "state" : "Released"
+  } ],
+  "2" : [ {
+    "key" : 50,
+    "state" : "Pressed"
+  }, {
+    "key" : 50,
+    "state" : "Released"
+  } ],
+  "3" : [ {
+    "key" : 51,
+    "state" : "Pressed"
+  }, {
+    "key" : 51,
+    "state" : "Released"
+  } ],
+  "4" : [ {
+    "key" : 52,
+    "state" : "Pressed"
+  }, {
+    "key" : 52,
+    "state" : "Released"
+  } ],
+  "5" : [ {
+    "key" : 53,
+    "state" : "Pressed"
+  }, {
+    "key" : 53,
+    "state" : "Released"
+  } ],
+  "6" : [ {
+    "key" : 54,
+    "state" : "Pressed"
+  }, {
+    "key" : 54,
+    "state" : "Released"
+  } ],
+  "7" : [ {
+    "key" : 55,
+    "state" : "Pressed"
+  }, {
+    "key" : 55,
+    "state" : "Released"
+  } ],
+  "8" : [ {
+    "key" : 56,
+    "state" : "Pressed"
+  }, {
+    "key" : 56,
+    "state" : "Released"
+  } ],
+  "9" : [ {
+    "key" : 57,
+    "state" : "Pressed"
+  }, {
+    "key" : 57,
+    "state" : "Released"
+  } ],
+  "!" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 49,
+    "state" : "Pressed"
+  }, {
+    "key" : 49,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "\"" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 50,
+    "state" : "Pressed"
+  }, {
+    "key" : 50,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "§" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 51,
+    "state" : "Pressed"
+  }, {
+    "key" : 51,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "$" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 52,
+    "state" : "Pressed"
+  }, {
+    "key" : 52,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "%" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 53,
+    "state" : "Pressed"
+  }, {
+    "key" : 53,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "&" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 54,
+    "state" : "Pressed"
+  }, {
+    "key" : 54,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "/" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 55,
+    "state" : "Pressed"
+  }, {
+    "key" : 55,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "(" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 56,
+    "state" : "Pressed"
+  }, {
+    "key" : 56,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  ")" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 57,
+    "state" : "Pressed"
+  }, {
+    "key" : 57,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "=" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 48,
+    "state" : "Pressed"
+  }, {
+    "key" : 48,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "?" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 0,
+    "state" : "Pressed"
+  }, {
+    "key" : 0,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "," : [ {
+    "key" : 44,
+    "state" : "Pressed"
+  }, {
+    "key" : 44,
+    "state" : "Released"
+  } ],
+  "." : [ {
+    "key" : 46,
+    "state" : "Pressed"
+  }, {
+    "key" : 46,
+    "state" : "Released"
+  } ],
+  "-" : [ {
+    "key" : 45,
+    "state" : "Pressed"
+  }, {
+    "key" : 45,
+    "state" : "Released"
+  } ],
+  ";" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 44,
+    "state" : "Pressed"
+  }, {
+    "key" : 44,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  ":" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 46,
+    "state" : "Pressed"
+  }, {
+    "key" : 46,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "_" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 45,
+    "state" : "Pressed"
+  }, {
+    "key" : 45,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "#" : [ {
+    "key" : 520,
+    "state" : "Pressed"
+  }, {
+    "key" : 520,
+    "state" : "Released"
+  } ],
+  "'" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 520,
+    "state" : "Pressed"
+  }, {
+    "key" : 520,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "+" : [ {
+    "key" : 521,
+    "state" : "Pressed"
+  }, {
+    "key" : 521,
+    "state" : "Released"
+  } ],
+  "*" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 521,
+    "state" : "Pressed"
+  }, {
+    "key" : 521,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "~" : [ {
+    "key" : 65406,
+    "state" : "Pressed"
+  }, {
+    "key" : 521,
+    "state" : "Pressed"
+  }, {
+    "key" : 521,
+    "state" : "Released"
+  }, {
+    "key" : 65406,
+    "state" : "Released"
+  } ],
+  "<" : [ {
+    "key" : 153,
+    "state" : "Pressed"
+  }, {
+    "key" : 153,
+    "state" : "Released"
+  } ],
+  ">" : [ {
+    "key" : 16,
+    "state" : "Pressed"
+  }, {
+    "key" : 153,
+    "state" : "Pressed"
+  }, {
+    "key" : 153,
+    "state" : "Released"
+  }, {
+    "key" : 16,
+    "state" : "Released"
+  } ],
+  "|" : [ {
+    "key" : 65406,
+    "state" : "Pressed"
+  }, {
+    "key" : 153,
+    "state" : "Pressed"
+  }, {
+    "key" : 153,
+    "state" : "Released"
+  }, {
+    "key" : 65406,
+    "state" : "Released"
+  } ],
+  "{" : [ {
+    "key" : 65406,
+    "state" : "Pressed"
+  }, {
+    "key" : 55,
+    "state" : "Pressed"
+  }, {
+    "key" : 55,
+    "state" : "Released"
+  }, {
+    "key" : 65406,
+    "state" : "Released"
+  } ],
+  "[" : [ {
+    "key" : 65406,
+    "state" : "Pressed"
+  }, {
+    "key" : 56,
+    "state" : "Pressed"
+  }, {
+    "key" : 56,
+    "state" : "Released"
+  }, {
+    "key" : 65406,
+    "state" : "Released"
+  } ],
+  "]" : [ {
+    "key" : 65406,
+    "state" : "Pressed"
+  }, {
+    "key" : 57,
+    "state" : "Pressed"
+  }, {
+    "key" : 57,
+    "state" : "Released"
+  }, {
+    "key" : 65406,
+    "state" : "Released"
+  } ],
+  "}" : [ {
+    "key" : 65406,
+    "state" : "Pressed"
+  }, {
+    "key" : 48,
+    "state" : "Pressed"
+  }, {
+    "key" : 48,
+    "state" : "Released"
+  }, {
+    "key" : 65406,
+    "state" : "Released"
+  } ],
+  "\\" : [ {
+    "key" : 65406,
+    "state" : "Pressed"
+  }, {
+    "key" : 0,
+    "state" : "Pressed"
+  }, {
+    "key" : 0,
+    "state" : "Released"
+  }, {
+    "key" : 65406,
+    "state" : "Released"
+  }, {
+    "key" : 65406,
+    "state" : "Pressed"
+  }, {
+    "key" : 0,
+    "state" : "Pressed"
+  }, {
+    "key" : 0,
+    "state" : "Released"
+  }, {
+    "key" : 65406,
+    "state" : "Released"
+  } ],
+  "\n" : [ {
+    "key" : 10,
+    "state" : "Pressed"
+  }, {
+    "key" : 10,
+    "state" : "Released"
+  } ],
+  "\t" : [ {
+    "key" : 9,
+    "state" : "Pressed"
+  }, {
+    "key" : 9,
+    "state" : "Released"
+  } ],
+  " " : [ {
+    "key" : 32,
+    "state" : "Pressed"
+  }, {
+    "key" : 32,
+    "state" : "Released"
+  } ]
+}

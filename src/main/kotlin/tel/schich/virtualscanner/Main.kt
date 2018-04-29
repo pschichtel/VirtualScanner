@@ -15,6 +15,7 @@ import java.awt.datatransfer.*
 import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.awt.event.MouseListener
 import java.awt.im.InputContext
 import java.awt.image.BufferedImage
 import java.io.File
@@ -29,10 +30,14 @@ import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JPanel
 
+typealias Actions = List<Action>
+typealias KeyLayout = Map<Char, Actions>
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Config(val layout: String = "de_DE_ISO.json",
-                  val prefix: List<Action> = listOf(),
-                  val suffix: List<Action> = listOf(),
+                  val normalizeLinebreaks: Boolean = true,
+                  val prefix: Actions = listOf(),
+                  val suffix: Actions = listOf(),
                   val delay: Long = 1000,
                   val charset: String = "")
 
@@ -45,15 +50,18 @@ fun main(args: Array<String>) {
         .enable(SerializationFeature.FLUSH_AFTER_WRITE_VALUE)
         .enable(SerializationFeature.INDENT_OUTPUT)
 
-    val config = load(json, listOf(args.getOrElse(1, {"config.json"}), "defaults.json"), Config())
-    val layout = load(json, listOf(config.layout, "default-layout.json"), mapOf<Char, List<Action>>())
-    val options = Options(envelope = Pair(config.prefix, config.suffix), keyboardLayout = layout)
+    val config = load(json, args.getOrElse(1, {"config.json"})) ?: Config()
+    val layout: KeyLayout = load(json, config.layout) ?: mapOf()
+    val options = Options(
+            envelope = Pair(config.prefix, config.suffix),
+            keyboardLayout = layout,
+            normalizeLinebreaks = config.normalizeLinebreaks)
     val robot = Robot()
 
     when (mode) {
         "screen" -> scanScreen(options, robot, config.delay)
         "clipboard" -> monitorClipboard(options, robot, config.delay)
-        "layout" -> createLayout(json, config.charset, config.layout)
+        "layout" -> createLayout(json, layout, config.charset, config.layout)
         else -> {
             System.err.println("available modes: screen, clipboard, layout")
             System.exit(1)
@@ -61,7 +69,7 @@ fun main(args: Array<String>) {
     }
 }
 
-fun createLayout(json: ObjectMapper, charset: String, filePath: String) {
+fun createLayout(json: ObjectMapper, existingLayout: KeyLayout, charset: String, filePath: String) {
     System.setProperty("awt.useSystemAAFontSettings","on")
     System.setProperty("swing.aatext", "true")
 
@@ -70,9 +78,72 @@ fun createLayout(json: ObjectMapper, charset: String, filePath: String) {
     frame.bounds = Rectangle(0, 0, 400, 400)
     frame.setLocationRelativeTo(null)
 
-    val charKeyTable = mutableMapOf<Char, List<Action>>()
+    val charKeyTable = mutableMapOf<Char, Actions>()
     val currentRecording = mutableListOf<Action>()
     val currentlyPressed = mutableSetOf<Int>()
+    var charsetPosition = 0
+    var currentChar: Char = charset[charsetPosition]
+    currentRecording.addAll(existingLayout[currentChar] ?: listOf())
+
+    val layout = GridBagLayout()
+    val panel = JPanel(layout)
+
+    fun label(fontSize: Int): JLabel {
+        val l = JLabel()
+        l.font = Font("Verdana", Font.BOLD, fontSize)
+        return l
+    }
+
+    fun constraint(x: Int, y: Int, width: Int = 1, height: Int = 1): GridBagConstraints {
+        val c = GridBagConstraints()
+        c.fill = GridBagConstraints.CENTER
+        c.weightx = 1.0
+        c.weighty = 1.0
+        c.gridx = x
+        c.gridy = y
+        c.gridwidth = width
+        c.gridheight = height
+        return c
+    }
+
+    val nameLabel = label(40)
+    nameLabel.text = stringifyChar(currentChar)
+    panel.add(nameLabel, constraint(0, 0, 3))
+
+    val currentLabel = label(30)
+    currentLabel.text = stringifyActions(currentRecording)
+    panel.add(currentLabel, constraint(0, 1, 3))
+
+
+    val resetButton = JButton()
+    resetButton.text = "Reset"
+    resetButton.addMouseListener(clickHandler(MouseEvent.BUTTON1) {
+        currentRecording.clear()
+        currentLabel.text = ""
+    })
+    panel.add(resetButton, constraint(0, 2))
+
+    val nextButton = JButton()
+    nextButton.text = "Next"
+    nextButton.addMouseListener(clickHandler(MouseEvent.BUTTON1) {
+        charsetPosition++
+        charKeyTable[currentChar] = currentRecording.toList()
+        currentRecording.clear()
+
+        if (charsetPosition >= charset.length) {
+            frame.dispose()
+            generateLayoutFile(json, filePath, charKeyTable)
+        } else {
+            currentChar = charset[charsetPosition]
+            currentRecording.addAll(existingLayout[currentChar] ?: listOf())
+            nameLabel.text = stringifyChar(currentChar)
+            currentLabel.text = stringifyActions(currentRecording)
+            if (charsetPosition + 1 >= charset.length) {
+                nextButton.text = "Complete"
+            }
+        }
+    })
+    panel.add(nextButton, constraint(2, 2))
 
     KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher { e ->
         if (e.id == KeyEvent.KEY_PRESSED && !currentlyPressed.contains(e.keyCode) || e.id == KeyEvent.KEY_RELEASED) {
@@ -85,67 +156,28 @@ fun createLayout(json: ObjectMapper, charset: String, filePath: String) {
             }
 
             currentRecording.add(Action(e.keyCode, state))
+            currentLabel.text = stringifyActions(currentRecording)
         }
-        false
+        true // the UI should not act on key events.
     }
-
-    val layout = GridLayout(3, 3)
-    val panel = JPanel(layout)
-    val children = Array(layout.columns * layout.rows, { Panel() })
-    children.forEach { c -> panel.add(c) }
-
-    val label = JLabel()
-
-    var charsetPosition = 0
-    var currentChar: Char = charset[charsetPosition]
-
-    label.font = Font("Verdana", Font.BOLD, 40)
-    label.text = stringifyChar(currentChar)
-    children[4].add(label)
-
-    val resetButton = JButton()
-    resetButton.text = "Reset"
-    resetButton.addMouseListener(object : MouseAdapter() {
-        override fun mouseClicked(e: MouseEvent?) {
-            if (e?.button == MouseEvent.BUTTON1) {
-                currentRecording.clear()
-            }
-        }
-    })
-    children[6].add(resetButton)
-
-    val nextButton = JButton()
-    nextButton.text = "Next"
-    nextButton.addMouseListener(object : MouseAdapter() {
-        override fun mouseClicked(e: MouseEvent?) {
-            if (e?.button == MouseEvent.BUTTON1) {
-                charsetPosition++
-                charKeyTable[currentChar] = currentRecording.toList()
-                currentRecording.clear()
-
-                if (charsetPosition >= charset.length) {
-                    frame.dispose()
-                    println(charKeyTable)
-                    generateLayoutFile(json, filePath, charKeyTable)
-                } else {
-                    currentChar = charset[charsetPosition]
-                    label.text = stringifyChar(currentChar)
-                    if (charsetPosition + 1 >= charset.length) {
-                        nextButton.text = "Complete"
-                    }
-                }
-            }
-        }
-    })
-    children[8].add(nextButton)
 
     frame.add(panel)
     frame.isVisible = true
 }
 
+fun clickHandler(button: Int, f: (MouseEvent) -> Unit): MouseListener {
+    return object : MouseAdapter() {
+        override fun mouseClicked(e: MouseEvent?) {
+            if (e != null && e.button == button) {
+                f(e)
+            }
+        }
+    }
+}
+
 fun stringifyChar(c: Char): String {
     return when (c) {
-        '\n' -> "Linebreak"
+        '\n', '\r' -> "Linebreak"
         '\t' -> "Tab"
         ' ' -> "Space"
         else -> c.toString()
@@ -288,14 +320,7 @@ fun act(r: Robot, action: Action) {
     }
 }
 
-inline fun <reified T : Any> load(json: ObjectMapper, paths: List<String>, default: T): T {
-    return paths.fold(default, { acc, path ->
-        if (acc == default) load(json, path, default)
-        else default
-    })
-}
-
-inline fun <reified T : Any> load(json: ObjectMapper, path: String, default: T): T {
+inline fun <reified T : Any> load(json: ObjectMapper, path: String): T? {
     val fromFile = read<T>(json, File(path))
     if (fromFile != null) {
         return fromFile
@@ -306,23 +331,22 @@ inline fun <reified T : Any> load(json: ObjectMapper, path: String, default: T):
         return fromJar
     }
 
-    return default
+    return null
 }
 
 inline fun <reified T : Any> read(json: ObjectMapper, file: File): T? {
     return if (!file.canRead()) null
-    else try {
-        json.readValue<T>(file)
-    } catch (ex: Exception) {
-        ex.printStackTrace(System.err)
-        null
-    }
+    else maybe(file) { json.readValue<T>(it) }
 }
 
 inline fun <reified T : Any> read(json: ObjectMapper, inStream: InputStream?): T? {
-    return if (inStream == null) null
+    return maybe(inStream) { json.readValue<T>(it) }
+}
+
+inline fun <reified I : Any, reified O : Any> maybe(input: I?, f: (I) -> O): O? {
+    return if (input == null) null
     else try {
-        json.readValue<T>(inStream)
+        f(input)
     } catch (ex: Exception) {
         ex.printStackTrace(System.err)
         null
@@ -334,4 +358,27 @@ fun generateLayoutFile(json: ObjectMapper, path: String, table: Map<Char, List<A
     writer.use {
         json.writeValue(it, table)
     }
+}
+
+fun stringifyActions(actions: List<Action>): String {
+
+    fun stateChar(state: State): Char {
+        return when (state) {
+            State.Pressed -> '+'
+            State.Released -> '-'
+        }
+    }
+
+    fun normalizeActions(input: List<Action>, i: Int = 0, output: List<Pair<Int, Char>> = listOf()): List<Pair<Int, Char>> {
+        return if (i >= input.size) output
+        else {
+            if (i + 1 < input.size && input[i].key == input[i + 1].key && input[i].state == State.Pressed && input[i + 1].state == State.Released) {
+                normalizeActions(input, i + 2, output + Pair(input[i].key, '~'))
+            } else {
+                normalizeActions(input, i + 1, output + Pair(input[i].key, stateChar(input[i].state)))
+            }
+        }
+    }
+
+    return normalizeActions(actions).joinToString("") { (c, s) -> "$s$c"}
 }
