@@ -12,6 +12,30 @@ Scan barcodes from your screen and emit the content as key strokes.
 * `clipboard`: Continuously scans the clipboard for images and scans them for barcodes
 * `layout`: A small UI to customize the character-key-mapping
 
+### Configuration
+
+A file called config.json is loaded from the working directory which configures to tool.
+
+```yaml
+{
+    "layout": "layout.json",
+    "normalizeLinebreaks": true,
+    "prefix": [],
+    "suffix": [],
+    "delay": 1000,
+    "charset": "abc"
+}
+```
+
+* `layout`: the layout file to load
+* `normalizeLinebreaks`: Whether to normalize the linebreaks to `\n`
+* `prefix`: The key actions to generate *before* the barcode content
+* `suffix`: The key actions to generate *after* the barcode content
+* `delay`: The delay before the tool starts producing key events after detecting the barcode in milliseconds
+* `charset`: The characters to map in the layout file, used by the `layout`.
+ 
+
+
 ## Action Sequence Syntax
 
 * `+10` -> Press key with code 10 down
