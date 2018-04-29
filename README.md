@@ -7,7 +7,7 @@ Scan barcodes from your screen and emit the content as key strokes.
 ```java -jar virtual-scanner.jar [mode] [configuration]```
 
 * `[mode]`: The mode (see below) to start in. Can be omitted.
-* `[configuration]`: The configuration file to load. Can be omitted and defaults to config.json
+* `[configuration]`: The configuration file to load. Can be omitted and defaults to `config.json`.
 
 ### Modes
 
