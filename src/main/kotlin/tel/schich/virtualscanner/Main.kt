@@ -25,10 +25,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.util.*
-import javax.swing.JButton
-import javax.swing.JFrame
-import javax.swing.JLabel
-import javax.swing.JPanel
+import javax.swing.*
 
 typealias Actions = List<Action>
 typealias KeyLayout = Map<Char, Actions>
@@ -114,6 +111,16 @@ fun createLayout(json: ObjectMapper, existingLayout: KeyLayout, charset: String,
     currentLabel.text = stringifyActions(currentRecording)
     panel.add(currentLabel, constraint(0, 1, 3))
 
+    val charSelector = JComboBox<Char>(Vector(charset.toList()))
+    charSelector.addActionListener {
+        charsetPosition = charSelector.selectedIndex
+        currentChar = charset[charsetPosition]
+        currentRecording.clear()
+        currentRecording.addAll(existingLayout[currentChar] ?: listOf())
+        nameLabel.text = stringifyChar(currentChar)
+        currentLabel.text = stringifyActions(currentRecording)
+    }
+    panel.add(charSelector, constraint(1, 2))
 
     val resetButton = JButton()
     resetButton.text = "Reset"
@@ -124,7 +131,7 @@ fun createLayout(json: ObjectMapper, existingLayout: KeyLayout, charset: String,
     panel.add(resetButton, constraint(0, 2))
 
     val nextButton = JButton()
-    nextButton.text = "Next"
+    nextButton.text = "Accept"
     nextButton.addMouseListener(clickHandler(MouseEvent.BUTTON1) {
         charsetPosition++
         charKeyTable[currentChar] = currentRecording.toList()
@@ -138,6 +145,7 @@ fun createLayout(json: ObjectMapper, existingLayout: KeyLayout, charset: String,
             currentRecording.addAll(existingLayout[currentChar] ?: listOf())
             nameLabel.text = stringifyChar(currentChar)
             currentLabel.text = stringifyActions(currentRecording)
+            charSelector.selectedIndex++
             if (charsetPosition + 1 >= charset.length) {
                 nextButton.text = "Complete"
             }
