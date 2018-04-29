@@ -36,7 +36,7 @@ If the file is not found, defaults will be loaded: [Default config.json on Githu
 * `prefix`: The key actions to generate *before* the barcode content.
 * `suffix`: The key actions to generate *after* the barcode content.
 * `delay`: The delay before the tool starts producing key events after detecting the barcode in milliseconds.
-* `charset`: The characters to map in the layout file, used by the `layout`.
+* `charset`: The characters to map in the layout file, used by the `layout` mode.
  
 ### Download
 
