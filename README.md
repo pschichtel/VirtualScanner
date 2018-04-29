@@ -26,6 +26,7 @@ A file called config.json is loaded from the working directory which configures 
     "charset": "abc"
 }
 ```
+(Default config: [Github](https://github.com/pschichtel/VirtualScanner/blob/master/src/main/resources/config.json))
 
 * `layout`: the layout file to load
 * `normalizeLinebreaks`: Whether to normalize the linebreaks to `\n`
