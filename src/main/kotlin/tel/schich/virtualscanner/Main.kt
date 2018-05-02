@@ -114,12 +114,6 @@ fun reader(): (Image) -> Array<Result> {
     val reader: MultipleBarcodeReader = GenericMultipleBarcodeReader(MultiFormatReader())
     val hints = mapOf(
             Pair(DecodeHintType.CHARACTER_SET, "UTF-8")
-//            Pair(DecodeHintType.POSSIBLE_FORMATS, listOf(
-//                    BarcodeFormat.QR_CODE,
-//                    BarcodeFormat.CODE_39,
-//                    BarcodeFormat.CODE_93,
-//                    BarcodeFormat.CODE_128
-//            ))
     )
 
     fun bufferImage(img: Image): BufferedImage {
@@ -168,23 +162,33 @@ fun scanScreen(options: Options, robot: Robot, delay: Long) {
 }
 
 fun handleResults(robot: Robot, options: Options, results: Array<Result>, delay: Long): Boolean {
-    return if (results.isNotEmpty()) {
-        for (result in results) {
+    return when {
+        results.size == 1 -> {
+            val result = results.first()
             val code = result.text
-            println("Found: >$code<")
             val actions = compile(code, options)
-            if (actions == null) {
-                println("Failed to parse code! Is the keyboard layout incomplete?")
+            return if (actions == null) {
+                System.err.println("Failed to parse code! Is the keyboard layout incomplete?")
+                false
             } else {
                 println(actions)
                 Thread.sleep(delay)
                 act(robot, actions)
+                true
             }
         }
-        true
-    } else {
-        System.err.println("Did not find any barcodes to scan!")
-        false
+        results.isEmpty() -> {
+            System.err.println("No barcodes detected!")
+            false
+        }
+        results.size > 1 -> {
+            System.err.println("Multiple barcodes sound, which one should I use?")
+            false
+        }
+        else -> {
+            System.err.println("Did not find any barcodes to scan!")
+            false
+        }
     }
 }
 
