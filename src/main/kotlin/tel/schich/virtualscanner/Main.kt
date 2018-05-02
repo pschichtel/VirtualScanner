@@ -82,6 +82,17 @@ fun createLayout(json: ObjectMapper, existingLayout: KeyLayout, charset: String,
     var currentChar: Char = charset[charsetPosition]
     currentRecording.addAll(existingLayout[currentChar] ?: listOf())
 
+    fun store() {
+        val completeLayout = (existingLayout + charKeyTable).filter { it.value.isNotEmpty() }
+        if (existingLayout != completeLayout) {
+            print("Writing changed layout...")
+            generateLayoutFile(json, filePath, completeLayout)
+            println("done!")
+        } else {
+            println("Nothing changed!")
+        }
+    }
+
     val layout = GridBagLayout()
     val panel = JPanel(layout)
 
@@ -111,18 +122,10 @@ fun createLayout(json: ObjectMapper, existingLayout: KeyLayout, charset: String,
     currentLabel.text = stringifyActions(currentRecording)
     panel.add(currentLabel, constraint(0, 1, 3))
 
+    val nextButton = JButton()
     val charSelector = JComboBox<Char>(Vector(charset.toList()))
-    charSelector.addActionListener {
-        charsetPosition = charSelector.selectedIndex
-        currentChar = charset[charsetPosition]
-        currentRecording.clear()
-        currentRecording.addAll(existingLayout[currentChar] ?: listOf())
-        nameLabel.text = stringifyChar(currentChar)
-        currentLabel.text = stringifyActions(currentRecording)
-    }
-    panel.add(charSelector, constraint(1, 2))
-
     val resetButton = JButton()
+
     resetButton.text = "Reset"
     resetButton.addMouseListener(clickHandler(MouseEvent.BUTTON1) {
         currentRecording.clear()
@@ -130,25 +133,29 @@ fun createLayout(json: ObjectMapper, existingLayout: KeyLayout, charset: String,
     })
     panel.add(resetButton, constraint(0, 2))
 
-    val nextButton = JButton()
+    charSelector.addActionListener {
+        charsetPosition = charSelector.selectedIndex
+        currentChar = charset[charsetPosition]
+        currentRecording.clear()
+        currentRecording.addAll(existingLayout[currentChar] ?: listOf())
+        nameLabel.text = stringifyChar(currentChar)
+        currentLabel.text = stringifyActions(currentRecording)
+        if (charsetPosition + 1 >= charset.length) {
+            nextButton.text = "Complete"
+        }
+    }
+    panel.add(charSelector, constraint(1, 2))
+
     nextButton.text = "Accept"
     nextButton.addMouseListener(clickHandler(MouseEvent.BUTTON1) {
-        charsetPosition++
         charKeyTable[currentChar] = currentRecording.toList()
-        currentRecording.clear()
+        store()
 
-        if (charsetPosition >= charset.length) {
+        if (charsetPosition + 1 >= charset.length) {
             frame.dispose()
-            generateLayoutFile(json, filePath, charKeyTable)
         } else {
-            currentChar = charset[charsetPosition]
-            currentRecording.addAll(existingLayout[currentChar] ?: listOf())
-            nameLabel.text = stringifyChar(currentChar)
-            currentLabel.text = stringifyActions(currentRecording)
+            // this will trigger an action on the combobox which in turn resets the state
             charSelector.selectedIndex++
-            if (charsetPosition + 1 >= charset.length) {
-                nextButton.text = "Complete"
-            }
         }
     })
     panel.add(nextButton, constraint(2, 2))
