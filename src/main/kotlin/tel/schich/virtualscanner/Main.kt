@@ -10,8 +10,8 @@ import com.google.zxing.client.j2se.BufferedImageLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.multi.GenericMultipleBarcodeReader
 import com.google.zxing.multi.MultipleBarcodeReader
-import java.awt.*
-import java.awt.datatransfer.*
+import java.awt.Image
+import java.awt.Robot
 import java.awt.im.InputContext
 import java.awt.image.BufferedImage
 import java.io.File
@@ -21,7 +21,6 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.util.*
-import javax.imageio.ImageIO
 
 val ApplicationName = "VirtualScanner"
 
@@ -64,49 +63,6 @@ fun main(args: Array<String>) {
     }
 }
 
-fun monitorClipboard(options: Options, robot: Robot, delay: Long) {
-    val trayIcon = if (SystemTray.isSupported()) {
-        val tray = SystemTray.getSystemTray()
-        val menu = PopupMenu()
-        val item = MenuItem("Close")
-        item.addActionListener {
-            System.exit(0)
-        }
-        menu.add(item)
-        val icon = TrayIcon(ImageIO.read(ClassLoader.getSystemResource("logo.png")), "VirtualScanner")
-        icon.isImageAutoSize = true
-        icon.popupMenu = menu;
-        tray.add(icon)
-        icon
-    } else null
-
-    Thread {
-        val reader = reader()
-        val sysClipboard = Toolkit.getDefaultToolkit().systemClipboard
-
-        val owner = object : ClipboardOwner, FlavorListener {
-            override fun lostOwnership(a: Clipboard?, b: Transferable?) {
-                Thread.sleep(250)
-                val contents = sysClipboard.getContents(null)
-                if (contents.isDataFlavorSupported(DataFlavor.imageFlavor)) {
-                    val image = contents.getTransferData(DataFlavor.imageFlavor) as Image
-                    trayIcon?.displayMessage(ApplicationName, "Detected barcode!", TrayIcon.MessageType.INFO)
-                    handleResults(robot, options, reader(image), delay)
-                }
-                sysClipboard.setContents(sysClipboard.getContents(null), this)
-            }
-
-            override fun flavorsChanged(e: FlavorEvent?) {
-                sysClipboard.removeFlavorListener(this)
-                lostOwnership(sysClipboard, sysClipboard.getContents(null))
-            }
-        }
-
-        sysClipboard.addFlavorListener(owner)
-    }.start()
-
-    trayIcon?.displayMessage(ApplicationName, "Running in background!", TrayIcon.MessageType.INFO)
-}
 
 fun reader(): (Image) -> Array<Result> {
     val reader: MultipleBarcodeReader = GenericMultipleBarcodeReader(MultiFormatReader())
@@ -132,30 +88,6 @@ fun reader(): (Image) -> Array<Result> {
         } catch (e: NotFoundException) {
             emptyArray()
         }
-    }
-}
-
-fun scanScreen(options: Options, robot: Robot, delay: Long) {
-    val graphicsEnv = GraphicsEnvironment.getLocalGraphicsEnvironment()
-    val reader = reader()
-
-    for (device in graphicsEnv.screenDevices) {
-        val monitorScreen = robot.createScreenCapture(device.defaultConfiguration.bounds)
-
-//        val window = JFrame("Debug")
-//        window.defaultCloseOperation = JFrame.DISPOSE_ON_CLOSE
-//        window.layout = FlowLayout()
-//        window.bounds = Rectangle(1200, 1200)
-//
-//        val image = JLabel(ImageIcon(monitorScreen.getScaledInstance(window.width, window.height * monitorScreen.height / monitorScreen.width, Image.SCALE_FAST)))
-//        window.add(image)
-//
-//        window.isVisible = true
-//        Thread.sleep(2000)
-//        window.dispose()
-
-        handleResults(robot, options, reader(monitorScreen), delay)
-
     }
 }
 
