@@ -105,16 +105,7 @@ fun monitorClipboard(options: Options, robot: Robot, delay: Long) {
         sysClipboard.addFlavorListener(owner)
     }.start()
 
-
     trayIcon?.displayMessage(ApplicationName, "Running in background!", TrayIcon.MessageType.INFO)
-    halt()
-}
-
-fun halt() {
-    Thread {
-        // keep us alive.
-        Thread.currentThread().join()
-    }.start()
 }
 
 fun reader(): (Image) -> Array<Result> {
