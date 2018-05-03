@@ -23,6 +23,8 @@ import java.nio.file.StandardOpenOption
 import java.util.*
 import javax.imageio.ImageIO
 
+val ApplicationName = "VirtualScanner"
+
 typealias Actions = List<Action>
 typealias KeyLayout = Map<Char, Actions>
 
@@ -63,6 +65,20 @@ fun main(args: Array<String>) {
 }
 
 fun monitorClipboard(options: Options, robot: Robot, delay: Long) {
+    val trayIcon = if (SystemTray.isSupported()) {
+        val tray = SystemTray.getSystemTray()
+        val menu = PopupMenu()
+        val item = MenuItem("Close")
+        item.addActionListener {
+            System.exit(0)
+        }
+        menu.add(item)
+        val icon = TrayIcon(ImageIO.read(ClassLoader.getSystemResource("logo.png")), "VirtualScanner")
+        icon.isImageAutoSize = true
+        icon.popupMenu = menu;
+        tray.add(icon)
+        icon
+    } else null
 
     Thread {
         val reader = reader()
@@ -74,6 +90,7 @@ fun monitorClipboard(options: Options, robot: Robot, delay: Long) {
                 val contents = sysClipboard.getContents(null)
                 if (contents.isDataFlavorSupported(DataFlavor.imageFlavor)) {
                     val image = contents.getTransferData(DataFlavor.imageFlavor) as Image
+                    trayIcon?.displayMessage(ApplicationName, "Detected barcode!", TrayIcon.MessageType.INFO)
                     handleResults(robot, options, reader(image), delay)
                 }
                 sysClipboard.setContents(sysClipboard.getContents(null), this)
@@ -88,18 +105,8 @@ fun monitorClipboard(options: Options, robot: Robot, delay: Long) {
         sysClipboard.addFlavorListener(owner)
     }.start()
 
-    if (SystemTray.isSupported()) {
-        val menu = PopupMenu()
-        val tray = SystemTray.getSystemTray()
 
-        val item = MenuItem("Close")
-        item.addActionListener {
-            System.exit(0)
-        }
-        menu.add(item)
-        tray.add(TrayIcon(ImageIO.read(ClassLoader.getSystemResource("logo.png"))))
-    }
-
+    trayIcon?.displayMessage(ApplicationName, "Running in background!", TrayIcon.MessageType.INFO)
     halt()
 }
 
