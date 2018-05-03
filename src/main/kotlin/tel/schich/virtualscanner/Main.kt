@@ -10,6 +10,7 @@ import com.google.zxing.client.j2se.BufferedImageLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.multi.GenericMultipleBarcodeReader
 import com.google.zxing.multi.MultipleBarcodeReader
+import notify.Notify
 import java.awt.Image
 import java.awt.Robot
 import java.awt.im.InputContext
@@ -22,7 +23,7 @@ import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.util.*
 
-val ApplicationName = "VirtualScanner"
+const val ApplicationName = "VirtualScanner"
 
 typealias Actions = List<Action>
 typealias KeyLayout = Map<Char, Actions>
@@ -97,6 +98,7 @@ fun handleResults(robot: Robot, options: Options, results: Array<Result>, delay:
             val result = results.first()
             val code = result.text
             val actions = compile(code, options)
+            Notify.info(ApplicationName, "Detected barcode!")
             return if (actions == null) {
                 System.err.println("Failed to parse code! Is the keyboard layout incomplete?")
                 false
@@ -121,10 +123,6 @@ fun handleResults(robot: Robot, options: Options, results: Array<Result>, delay:
         }
     }
 }
-
-//fun loadImage(url: String): BufferedImage {
-//    return ImageIO.read(URL(url))
-//}
 
 fun act(r: Robot, actions: List<Action>) {
     for (action in actions) {
@@ -167,7 +165,7 @@ inline fun <reified T : Any> read(json: ObjectMapper, inStream: InputStream?): T
     return maybe(inStream) { json.readValue<T>(it) }
 }
 
-inline fun <reified I : Any, reified O : Any> maybe(input: I?, f: (I) -> O): O? {
+inline fun <I : Any, O : Any> maybe(input: I?, f: (I) -> O): O? {
     return if (input == null) null
     else try {
         f(input)

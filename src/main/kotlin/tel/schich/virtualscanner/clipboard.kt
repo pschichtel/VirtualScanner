@@ -27,7 +27,6 @@ fun monitorClipboard(options: Options, robot: Robot, delay: Long) {
             val contents = sysClipboard.getContents(null)
             if (contents.isDataFlavorSupported(DataFlavor.imageFlavor)) {
                 val image = contents.getTransferData(DataFlavor.imageFlavor) as Image
-                Notify.info(ApplicationName, "Detected barcode!")
                 handleResults(robot, options, reader(image), delay)
             }
             sysClipboard.setContents(sysClipboard.getContents(null), this)
