@@ -1,50 +1,44 @@
 package tel.schich.virtualscanner
 
-import java.awt.*
+import dorkbox.systemTray.SystemTray
+import notify.Notify
+import java.awt.Image
+import java.awt.Robot
+import java.awt.Toolkit
 import java.awt.datatransfer.*
-import javax.imageio.ImageIO
 
 
 fun monitorClipboard(options: Options, robot: Robot, delay: Long) {
-    val trayIcon = if (SystemTray.isSupported()) {
-        val tray = SystemTray.getSystemTray()
-        val menu = PopupMenu()
-        val item = MenuItem("Close")
-        item.addActionListener {
-            System.exit(0)
-        }
-        menu.add(item)
-        val icon = TrayIcon(ImageIO.read(ClassLoader.getSystemResource("logo.png")), "VirtualScanner")
-        icon.isImageAutoSize = true
-        icon.popupMenu = menu;
-        tray.add(icon)
-        icon
-    } else null
+    val sysTray: SystemTray? = SystemTray.get()
+    if (sysTray != null) {
+        sysTray.setImage(ClassLoader.getSystemResource("logo.png"))
+        sysTray.setTooltip(ApplicationName)
+        sysTray.menu.add(dorkbox.systemTray.MenuItem("Exit", {
+            sysTray.shutdown()
+        }))
+    }
 
-    Thread {
-        val reader = reader()
-        val sysClipboard = Toolkit.getDefaultToolkit().systemClipboard
+    val reader = reader()
+    val sysClipboard = Toolkit.getDefaultToolkit().systemClipboard
 
-        val owner = object : ClipboardOwner, FlavorListener {
-            override fun lostOwnership(a: Clipboard?, b: Transferable?) {
-                Thread.sleep(250)
-                val contents = sysClipboard.getContents(null)
-                if (contents.isDataFlavorSupported(DataFlavor.imageFlavor)) {
-                    val image = contents.getTransferData(DataFlavor.imageFlavor) as Image
-                    trayIcon?.displayMessage(ApplicationName, "Detected barcode!", TrayIcon.MessageType.INFO)
-                    handleResults(robot, options, reader(image), delay)
-                }
-                sysClipboard.setContents(sysClipboard.getContents(null), this)
+    val owner = object : ClipboardOwner, FlavorListener {
+        override fun lostOwnership(a: Clipboard?, b: Transferable?) {
+            Thread.sleep(250)
+            val contents = sysClipboard.getContents(null)
+            if (contents.isDataFlavorSupported(DataFlavor.imageFlavor)) {
+                val image = contents.getTransferData(DataFlavor.imageFlavor) as Image
+                Notify.info(ApplicationName, "Detected barcode!")
+                handleResults(robot, options, reader(image), delay)
             }
-
-            override fun flavorsChanged(e: FlavorEvent?) {
-                sysClipboard.removeFlavorListener(this)
-                lostOwnership(sysClipboard, sysClipboard.getContents(null))
-            }
+            sysClipboard.setContents(sysClipboard.getContents(null), this)
         }
 
-        sysClipboard.addFlavorListener(owner)
-    }.start()
+        override fun flavorsChanged(e: FlavorEvent?) {
+            sysClipboard.removeFlavorListener(this)
+            lostOwnership(sysClipboard, sysClipboard.getContents(null))
+        }
+    }
 
-    trayIcon?.displayMessage(ApplicationName, "Running in background!", TrayIcon.MessageType.INFO)
+    sysClipboard.addFlavorListener(owner)
+    Notify.info(ApplicationName, "Running in background!")
 }
