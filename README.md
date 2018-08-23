@@ -2,6 +2,8 @@
 
 Scan barcodes from your screen and emit the content as key strokes.
 
+The barcode scanning uses the [zxing](https://github.com/zxing/zxing) library, which is also commonly used in Android projects. If scanning does not work with specific barcode it is most likely due to this library not supporting the barcode. 
+
 ## Usage
 
 ```java -jar virtual-scanner.jar [mode] [configuration]```

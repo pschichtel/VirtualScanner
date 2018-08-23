@@ -11,7 +11,7 @@
     <inceptionYear>2018</inceptionYear>
 
     <properties>
-        <kotlinVersion>1.2.41</kotlinVersion>
+        <kotlinVersion>1.2.51</kotlinVersion>
     </properties>
 
     <licenses>
@@ -41,7 +41,7 @@
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>javase</artifactId>
-            <version>3.3.2</version>
+            <version>3.3.3</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
