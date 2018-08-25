@@ -102,7 +102,6 @@ fun handleResults(robot: Robot, options: Options, results: Array<Result>, delay:
         results.size == 1 -> {
             val result = results.first()
             val content = guessEncodingAndReencode(result.text)
-            println("Detected: '$content'")
             val actions = compile(content, options)
             Notify.info(ApplicationName, "Detected barcode!")
             return if (actions == null) {
@@ -130,25 +129,30 @@ fun handleResults(robot: Robot, options: Options, results: Array<Result>, delay:
     }
 }
 
+
 fun guessEncodingAndReencode(code: String): String {
     val bytes = code.toByteArray(StandardCharsets.ISO_8859_1)
 
-    if (bytes.size > 4) {
-        if (bytes[0] == 0xFF.toByte() && bytes[1] == 0xFE.toByte() && bytes[2] == 0.toByte() && bytes[3] == 0.toByte()) {
-            return String(bytes, Charset.forName("UTF_32"))
-        }
-        if (bytes[0] == 0.toByte() && bytes[1] == 0.toByte() && bytes[2] == 0xFE.toByte() && bytes[3] == 0xFF.toByte()) {
-            return String(bytes, Charset.forName("UTF_32"))
-        }
+    val ff = 0xFF.toByte()
+    val fe = 0xFE.toByte()
+    val ze = 0.toByte()
+
+    fun hasUTF32BOM(b: ByteArray): Boolean {
+        return (b[0] == ff && b[1] == fe && b[2] == ze && b[3] == ze) ||
+               (b[0] == ze && b[1] == ze && b[2] == fe && b[3] == ff)
     }
 
-    if (bytes.size > 2) {
-        if (bytes[0] == 0xFF.toByte() && bytes[1] == 0xFE.toByte()) {
-            return String(bytes, StandardCharsets.UTF_16)
-        }
-        if (bytes[0] == 0xFE.toByte() && bytes[1] == 0xFF.toByte()) {
-            return String(bytes, StandardCharsets.UTF_16)
-        }
+    fun hasUTF16BOM(b: ByteArray): Boolean {
+        return (b[0] == ff && b[1] == fe) ||
+               (b[0] == fe && b[1] == ff)
+    }
+
+    if (bytes.size > 4 && hasUTF32BOM(bytes)) {
+        return String(bytes, Charset.forName("UTF_32"))
+    }
+
+    if (bytes.size > 2 && hasUTF16BOM(bytes)) {
+        return String(bytes, StandardCharsets.UTF_16)
     }
 
     val zxingGuess = StringUtils.guessEncoding(bytes, null)
