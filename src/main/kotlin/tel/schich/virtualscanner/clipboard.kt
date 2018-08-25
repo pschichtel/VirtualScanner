@@ -14,7 +14,11 @@ fun monitorClipboard(options: Options, robot: Robot, delay: Long) {
         sysTray.setImage(ClassLoader.getSystemResource("logo.png"))
         sysTray.setTooltip(ApplicationName)
         sysTray.menu.add(dorkbox.systemTray.MenuItem("Exit") {
-            sysTray.shutdown()
+            try {
+                sysTray.shutdown()
+            } finally {
+                System.exit(0)
+            }
         })
     }
 
