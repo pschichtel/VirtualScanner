@@ -12,7 +12,7 @@
 
     <groupId>tel.schich</groupId>
     <artifactId>virtual-scanner</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.1.0</version>
     <description>Scan barcodes from your screen and emit the content as key strokes.</description>
     <inceptionYear>2018</inceptionYear>
 
