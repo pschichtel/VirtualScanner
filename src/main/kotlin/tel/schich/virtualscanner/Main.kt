@@ -8,6 +8,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.zxing.*
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource
 import com.google.zxing.common.HybridBinarizer
+import com.google.zxing.common.StringUtils
 import com.google.zxing.multi.GenericMultipleBarcodeReader
 import com.google.zxing.multi.MultipleBarcodeReader
 import notify.Notify
@@ -18,6 +19,7 @@ import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
 import java.lang.IllegalArgumentException
+import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -130,12 +132,13 @@ fun handleResults(robot: Robot, options: Options, results: Array<Result>, delay:
 
 fun guessEncodingAndReencode(code: String): String {
     val bytes = code.toByteArray(StandardCharsets.ISO_8859_1)
-    if (bytes.size > 3) {
-        if (bytes[0] == 0xEF.toByte() && bytes[1] == 0xBB.toByte() && bytes[2] == 0xBF.toByte()) {
-            return String(bytes, StandardCharsets.UTF_8)
+
+    if (bytes.size > 4) {
+        if (bytes[0] == 0xFF.toByte() && bytes[1] == 0xFE.toByte() && bytes[2] == 0.toByte() && bytes[3] == 0.toByte()) {
+            return String(bytes, Charset.forName("UTF_32"))
         }
-        if (bytes[0] == 0xBF.toByte() && bytes[1] == 0xBB.toByte() && bytes[2] == 0xEF.toByte()) {
-            return String(bytes, StandardCharsets.UTF_8)
+        if (bytes[0] == 0.toByte() && bytes[1] == 0.toByte() && bytes[2] == 0xFE.toByte() && bytes[3] == 0xFF.toByte()) {
+            return String(bytes, Charset.forName("UTF_32"))
         }
     }
 
@@ -148,7 +151,8 @@ fun guessEncodingAndReencode(code: String): String {
         }
     }
 
-    return code
+    val zxingGuess = StringUtils.guessEncoding(bytes, null)
+    return String(bytes, Charset.forName(zxingGuess))
 }
 
 fun act(r: Robot, actions: List<Action>) {
