@@ -1,5 +1,6 @@
 {
     "layout": "layout.json",
+    "encodingHint": "UTF-8",
     "normalizeLinebreaks": true,
     "prefix": [
         {"key": 115, "state": "Pressed"},

@@ -5,7 +5,7 @@ import java.awt.Robot
 
 fun scanScreen(options: Options, robot: Robot, delay: Long) {
     val graphicsEnv = GraphicsEnvironment.getLocalGraphicsEnvironment()
-    val reader = reader()
+    val reader = reader(options.encodingHint)
 
     for (device in graphicsEnv.screenDevices) {
         val monitorScreen = robot.createScreenCapture(device.defaultConfiguration.bounds)

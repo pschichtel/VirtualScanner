@@ -11,7 +11,7 @@
     <inceptionYear>2018</inceptionYear>
 
     <properties>
-        <kotlinVersion>1.2.51</kotlinVersion>
+        <kotlinVersion>1.2.61</kotlinVersion>
     </properties>
 
     <licenses>

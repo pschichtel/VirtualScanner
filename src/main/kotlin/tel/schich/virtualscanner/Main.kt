@@ -18,6 +18,7 @@ import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
 import java.lang.IllegalArgumentException
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
@@ -30,6 +31,7 @@ typealias KeyLayout = Map<Char, Actions>
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Config(val layout: String = "de_DE_ISO.json",
+                  val encodingHint: String = DefaultEncodingHint,
                   val normalizeLinebreaks: Boolean = true,
                   val prefix: Actions = listOf(),
                   val suffix: Actions = listOf(),
@@ -39,15 +41,16 @@ data class Config(val layout: String = "de_DE_ISO.json",
 fun main(args: Array<String>) {
 
     InputContext.getInstance().selectInputMethod(Locale.ENGLISH)
-    val mode = args.getOrElse(0, { "screen" }).toLowerCase()
+    val mode = args.getOrElse(0) { "screen" }.toLowerCase()
 
     val json = jacksonObjectMapper()
         .enable(SerializationFeature.FLUSH_AFTER_WRITE_VALUE)
         .enable(SerializationFeature.INDENT_OUTPUT)
 
-    val config = load(json, args.getOrElse(1, {"config.json"})) ?: Config()
+    val config = load(json, args.getOrElse(1) {"config.json"}) ?: Config()
     val layout: KeyLayout = load(json, config.layout) ?: mapOf()
     val options = Options(
+            encodingHint = config.encodingHint,
             envelope = Pair(config.prefix, config.suffix),
             keyboardLayout = layout,
             normalizeLinebreaks = config.normalizeLinebreaks)
@@ -65,10 +68,10 @@ fun main(args: Array<String>) {
 }
 
 
-fun reader(): (Image) -> Array<Result> {
+fun reader(encodingHint: String): (Image) -> Array<Result> {
     val reader: MultipleBarcodeReader = GenericMultipleBarcodeReader(MultiFormatReader())
     val hints = mapOf(
-            Pair(DecodeHintType.CHARACTER_SET, "UTF-8")
+            Pair(DecodeHintType.CHARACTER_SET, encodingHint)
     )
 
     fun bufferImage(img: Image): BufferedImage {
@@ -96,8 +99,9 @@ fun handleResults(robot: Robot, options: Options, results: Array<Result>, delay:
     return when {
         results.size == 1 -> {
             val result = results.first()
-            val code = result.text
-            val actions = compile(code, options)
+            val content = guessEncodingAndReencode(result.text)
+            println("Detected: '$content'")
+            val actions = compile(content, options)
             Notify.info(ApplicationName, "Detected barcode!")
             return if (actions == null) {
                 System.err.println("Failed to parse code! Is the keyboard layout incomplete?")
@@ -122,6 +126,29 @@ fun handleResults(robot: Robot, options: Options, results: Array<Result>, delay:
             false
         }
     }
+}
+
+fun guessEncodingAndReencode(code: String): String {
+    val bytes = code.toByteArray(StandardCharsets.ISO_8859_1)
+    if (bytes.size > 3) {
+        if (bytes[0] == 0xEF.toByte() && bytes[1] == 0xBB.toByte() && bytes[2] == 0xBF.toByte()) {
+            return String(bytes, StandardCharsets.UTF_8)
+        }
+        if (bytes[0] == 0xBF.toByte() && bytes[1] == 0xBB.toByte() && bytes[2] == 0xEF.toByte()) {
+            return String(bytes, StandardCharsets.UTF_8)
+        }
+    }
+
+    if (bytes.size > 2) {
+        if (bytes[0] == 0xFF.toByte() && bytes[1] == 0xFE.toByte()) {
+            return String(bytes, StandardCharsets.UTF_16)
+        }
+        if (bytes[0] == 0xFE.toByte() && bytes[1] == 0xFF.toByte()) {
+            return String(bytes, StandardCharsets.UTF_16)
+        }
+    }
+
+    return code
 }
 
 fun act(r: Robot, actions: List<Action>) {

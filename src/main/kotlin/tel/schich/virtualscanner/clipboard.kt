@@ -13,12 +13,12 @@ fun monitorClipboard(options: Options, robot: Robot, delay: Long) {
     if (sysTray != null) {
         sysTray.setImage(ClassLoader.getSystemResource("logo.png"))
         sysTray.setTooltip(ApplicationName)
-        sysTray.menu.add(dorkbox.systemTray.MenuItem("Exit", {
+        sysTray.menu.add(dorkbox.systemTray.MenuItem("Exit") {
             sysTray.shutdown()
-        }))
+        })
     }
 
-    val reader = reader()
+    val reader = reader(options.encodingHint)
     val sysClipboard = Toolkit.getDefaultToolkit().systemClipboard
 
     val owner = object : ClipboardOwner, FlavorListener {
