@@ -4,6 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>9</version>
+    </parent>
+
     <groupId>tel.schich</groupId>
     <artifactId>virtual-scanner</artifactId>
     <version>1.0.1-SNAPSHOT</version>
@@ -12,11 +18,13 @@
 
     <properties>
         <kotlinVersion>1.2.61</kotlinVersion>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <licenses>
         <license>
-            <name>MIT</name>
+            <name>GPLv3</name>
+            <url>LICENSE</url>
         </license>
     </licenses>
 
@@ -26,6 +34,31 @@
         <developerConnection>scm:git:git@github.com:pschichtel/VirtualScanner.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
+
+    <developers>
+        <developer>
+            <id>pschichtel</id>
+            <name>Phillip Schichtel</name>
+            <email>phillip@schich.tel</email>
+            <roles>
+                <role>Project Lead</role>
+            </roles>
+        </developer>
+    </developers>
+
+    <distributionManagement>
+        <repository>
+            <id>ossrh</id>
+            <name>Nexus Release Repository</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <name>Sonatype Nexus Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+            <uniqueVersion>false</uniqueVersion>
+        </snapshotRepository>
+    </distributionManagement>
 
     <dependencies>
         <dependency>
@@ -46,12 +79,12 @@
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-kotlin</artifactId>
-            <version>2.9.4.1</version>
+            <version>2.9.6</version>
         </dependency>
         <dependency>
             <groupId>com.dorkbox</groupId>
             <artifactId>SystemTray</artifactId>
-            <version>3.12</version>
+            <version>3.15</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -86,9 +119,39 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>3.0</version>
+                <configuration>
+                    <strictCheck>true</strictCheck>
+                    <header>com/mycila/maven/plugin/license/templates/GPL-3.txt</header>
+                    <includes>
+                        <include>src/**/*.java</include>
+                        <include>src/**/*.kt</include>
+                    </includes>
+                    <excludes>
+                        <exclude>${project.build.outputDirectory}</exclude>
+                    </excludes>
+                    <properties>
+                        <owner>Phillip Schichtel</owner>
+                    </properties>
+                    <mapping>
+                        <java>SLASHSTAR_STYLE</java>
+                    </mapping>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>format</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.1.1</version>
                 <configuration>
                     <shadedArtifactAttached>false</shadedArtifactAttached>
                 </configuration>
@@ -104,7 +167,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.0.2</version>
+                <version>3.1.0</version>
                 <configuration>
                     <archive>
                         <manifest>
