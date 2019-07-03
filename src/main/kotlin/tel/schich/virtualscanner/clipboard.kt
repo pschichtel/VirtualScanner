@@ -18,12 +18,11 @@
 package tel.schich.virtualscanner
 
 import dorkbox.systemTray.SystemTray
-import notify.Notify
 import java.awt.Image
 import java.awt.Robot
 import java.awt.Toolkit
 import java.awt.datatransfer.*
-
+import kotlin.system.exitProcess
 
 fun monitorClipboard(options: Options, robot: Robot, delay: Long) {
     val sysTray: SystemTray? = SystemTray.get()
@@ -34,7 +33,7 @@ fun monitorClipboard(options: Options, robot: Robot, delay: Long) {
             try {
                 sysTray.shutdown()
             } finally {
-                System.exit(0)
+                exitProcess(0)
             }
         })
     }
@@ -60,5 +59,5 @@ fun monitorClipboard(options: Options, robot: Robot, delay: Long) {
     }
 
     sysClipboard.addFlavorListener(owner)
-    Notify.info(ApplicationName, "Running in background!")
+    notify("Running in background!")
 }

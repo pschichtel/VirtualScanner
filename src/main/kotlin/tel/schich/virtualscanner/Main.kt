@@ -42,6 +42,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.util.*
+import kotlin.system.exitProcess
 
 const val ApplicationName = "VirtualScanner"
 
@@ -81,7 +82,7 @@ fun main(args: Array<String>) {
         "layout" -> createLayout(json, layout, config.charset, config.layout)
         else -> {
             System.err.println("available modes: screen, clipboard, layout")
-            System.exit(1)
+            exitProcess(1)
         }
     }
 }
@@ -122,7 +123,7 @@ fun handleResults(robot: Robot, options: Options, results: Array<Result>, delay:
             val actions = compile(content, options)
             Notify.info(ApplicationName, "Detected barcode!")
             return if (actions == null) {
-                System.err.println("Failed to parse code! Is the keyboard layout incomplete?")
+                notify("Failed to parse code! Is the keyboard layout incomplete?")
                 false
             } else {
                 println(actions)
@@ -131,16 +132,12 @@ fun handleResults(robot: Robot, options: Options, results: Array<Result>, delay:
                 true
             }
         }
-        results.isEmpty() -> {
-            System.err.println("No barcodes detected!")
-            false
-        }
         results.size > 1 -> {
-            System.err.println("Multiple barcodes sound, which one should I use?")
+            notify("Multiple barcodes found, which one should I use?")
             false
         }
         else -> {
-            System.err.println("Did not find any barcodes to scan!")
+            notify("No barcodes detected!")
             false
         }
     }
@@ -255,4 +252,9 @@ fun stringifyActions(actions: List<Action>): String {
     }
 
     return normalizeActions(actions).joinToString("") { (c, s) -> "$s$c"}
+}
+
+fun notify(message: String) {
+    println(message)
+    Notify.notify(ApplicationName, message)
 }
