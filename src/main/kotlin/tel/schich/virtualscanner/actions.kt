@@ -1,4 +1,4 @@
-/**
+/*
  * virtual-scanner - Scan barcodes from your screen and emit the content as key strokes.
  * Copyright © 2018 Phillip Schichtel (${email})
  *
