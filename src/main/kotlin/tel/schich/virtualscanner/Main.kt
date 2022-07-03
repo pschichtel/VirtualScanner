@@ -1,6 +1,6 @@
 /*
  * virtual-scanner - Scan barcodes from your screen and emit the content as key strokes.
- * Copyright © 2018 Phillip Schichtel (${email})
+ * Copyright © 2018 Phillip Schichtel (phillip@schich.tel)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,10 +37,9 @@ import java.io.File
 import java.io.InputStream
 import java.lang.IllegalArgumentException
 import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.nio.file.StandardOpenOption
+import java.nio.file.StandardOpenOption.*
 import java.util.*
 import kotlin.system.exitProcess
 
@@ -61,7 +60,7 @@ data class Config(val layout: String = "de_DE_ISO.json",
 fun main(args: Array<String>) {
 
     InputContext.getInstance().selectInputMethod(Locale.ENGLISH)
-    val mode = args.getOrElse(0) { "screen" }.toLowerCase()
+    val mode = args.getOrElse(0) { "screen" }.lowercase()
 
     val json = jacksonObjectMapper()
         .enable(SerializationFeature.FLUSH_AFTER_WRITE_VALUE)
@@ -115,37 +114,35 @@ fun reader(encodingHint: String): (Image) -> Array<Result> {
     }
 }
 
-fun handleResults(robot: Robot, options: Options, results: Array<Result>, delay: Long): Boolean {
-    return when {
-        results.size == 1 -> {
-            val result = results.first()
-            val content = guessEncodingAndReencode(result.text)
-            val actions = compile(content, options)
-            Notify.info(ApplicationName, "Detected barcode!")
-            return if (actions == null) {
-                notify("Failed to parse code! Is the keyboard layout incomplete?")
-                false
-            } else {
-                println(actions)
-                Thread.sleep(delay)
-                act(robot, actions)
-                true
-            }
-        }
-        results.size > 1 -> {
-            notify("Multiple barcodes found, which one should I use?")
+fun handleResults(robot: Robot, options: Options, results: Array<Result>, delay: Long): Boolean = when {
+    results.size == 1 -> {
+        val result = results.first()
+        val content = guessEncodingAndReencode(result.text)
+        val actions = compile(content, options)
+        Notify.info(ApplicationName, "Detected barcode!")
+        if (actions == null) {
+            notify("Failed to parse code! Is the keyboard layout incomplete?")
             false
+        } else {
+            println(actions)
+            Thread.sleep(delay)
+            act(robot, actions)
+            true
         }
-        else -> {
-            notify("No barcodes detected!")
-            false
-        }
+    }
+    results.size > 1 -> {
+        notify("Multiple barcodes found, which one should I use?")
+        false
+    }
+    else -> {
+        notify("No barcodes detected!")
+        false
     }
 }
 
 
 fun guessEncodingAndReencode(code: String): String {
-    val bytes = code.toByteArray(StandardCharsets.ISO_8859_1)
+    val bytes = code.toByteArray(Charsets.ISO_8859_1)
 
     val ff = 0xFF.toByte()
     val fe = 0xFE.toByte()
@@ -162,11 +159,11 @@ fun guessEncodingAndReencode(code: String): String {
     }
 
     if (bytes.size > 4 && hasUTF32BOM(bytes)) {
-        return String(bytes, Charset.forName("UTF_32"))
+        return String(bytes, Charsets.UTF_32)
     }
 
     if (bytes.size > 2 && hasUTF16BOM(bytes)) {
-        return String(bytes, StandardCharsets.UTF_16)
+        return String(bytes, Charsets.UTF_16)
     }
 
     val zxingGuess = StringUtils.guessEncoding(bytes, null)
@@ -207,11 +204,11 @@ inline fun <reified T : Any> load(json: ObjectMapper, path: String): T? {
 
 inline fun <reified T : Any> read(json: ObjectMapper, file: File): T? {
     return if (!file.canRead()) null
-    else maybe(file) { json.readValue<T>(it) }
+    else maybe(file) { json.readValue(it) }
 }
 
 inline fun <reified T : Any> read(json: ObjectMapper, inStream: InputStream?): T? {
-    return maybe(inStream) { json.readValue<T>(it) }
+    return maybe(inStream) { json.readValue(it) }
 }
 
 inline fun <I : Any, O : Any> maybe(input: I?, f: (I) -> O): O? {
@@ -225,8 +222,7 @@ inline fun <I : Any, O : Any> maybe(input: I?, f: (I) -> O): O? {
 }
 
 fun generateLayoutFile(json: ObjectMapper, path: String, table: Map<Char, List<Action>>) {
-    val writer = Files.newBufferedWriter(Paths.get(path), Charsets.UTF_8, StandardOpenOption.WRITE, StandardOpenOption.SYNC, StandardOpenOption.DSYNC, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)
-    writer.use {
+    Files.newBufferedWriter(Paths.get(path), Charsets.UTF_8, WRITE, SYNC, DSYNC, TRUNCATE_EXISTING, CREATE).use {
         json.writeValue(it, table)
     }
 }

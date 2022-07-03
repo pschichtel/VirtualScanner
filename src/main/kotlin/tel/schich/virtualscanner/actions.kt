@@ -1,6 +1,6 @@
 /*
  * virtual-scanner - Scan barcodes from your screen and emit the content as key strokes.
- * Copyright © 2018 Phillip Schichtel (${email})
+ * Copyright © 2018 Phillip Schichtel (phillip@schich.tel)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,9 +17,7 @@
  */
 package tel.schich.virtualscanner
 
-import java.nio.charset.StandardCharsets
-
-val DefaultEncodingHint: String = StandardCharsets.UTF_8.name()
+val DefaultEncodingHint: String = Charsets.UTF_8.name()
 
 enum class State { Released, Pressed }
 

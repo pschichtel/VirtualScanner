@@ -108,6 +108,9 @@
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <version>${kotlinVersion}</version>
+                <configuration>
+                    <jvmTarget>1.8</jvmTarget>
+                </configuration>
                 <executions>
                     <execution>
                         <id>compile</id>
@@ -134,6 +137,7 @@
                     </excludes>
                     <properties>
                         <owner>Phillip Schichtel</owner>
+                        <email>phillip@schich.tel</email>
                     </properties>
                     <mapping>
                         <java>SLASHSTAR_STYLE</java>
