@@ -17,7 +17,7 @@
     <inceptionYear>2018</inceptionYear>
 
     <properties>
-        <kotlinVersion>1.7.0</kotlinVersion>
+        <kotlinVersion>2.0.21</kotlinVersion>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
