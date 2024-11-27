@@ -1,0 +1,20 @@
+[versions]
+kotlin = "2.1.0"
+shadow = "8.3.5"
+javaToOsNotify = "0.6"
+systemTray = "4.4"
+zxing = "3.5.3"
+kotlinxSerializationJson = "1.7.3"
+slf4jSimple = "2.0.16"
+
+[libraries]
+javaToOsNotify = { module = "com.github.wokier:java-to-OS-notify", version.ref="javaToOsNotify" }
+systemTray = { module = "com.dorkbox:SystemTray", version.ref="systemTray" }
+zxing = { module = "com.google.zxing:javase", version.ref="zxing" }
+kotlinxSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref="kotlinxSerializationJson" }
+slf4jSimple = { module = "org.slf4j:slf4j-simple", version.ref="slf4jSimple" }
+
+[plugins]
+kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlinKotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }

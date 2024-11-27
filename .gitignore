@@ -1,5 +1,7 @@
 .idea/
-target/
+build/
+.kotlin/
+.gradle/
 *.iml
 /*.xml
 !/pom.xml

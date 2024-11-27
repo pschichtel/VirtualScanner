@@ -17,7 +17,7 @@
  */
 package tel.schich.virtualscanner
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import kotlinx.serialization.json.Json
 import java.awt.*
 import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
@@ -27,7 +27,7 @@ import java.util.*
 import javax.swing.*
 
 
-fun createLayout(json: ObjectMapper, existingLayout: KeyLayout, charset: String, filePath: String) {
+fun createLayout(json: Json, existingLayout: KeyLayout, charset: String, filePath: String) {
     System.setProperty("awt.useSystemAAFontSettings","on")
     System.setProperty("swing.aatext", "true")
 

@@ -17,10 +17,14 @@
  */
 package tel.schich.virtualscanner
 
+import kotlinx.serialization.Serializable
+
 val DefaultEncodingHint: String = Charsets.UTF_8.name()
 
+@Serializable
 enum class State { Released, Pressed }
 
+@Serializable
 data class Action(val key: Int, val state: State)
 
 data class Options(val encodingHint: String = DefaultEncodingHint,

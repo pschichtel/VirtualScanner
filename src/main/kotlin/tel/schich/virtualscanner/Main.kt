@@ -17,38 +17,42 @@
  */
 package tel.schich.virtualscanner
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.zxing.*
+import com.google.zxing.BinaryBitmap
+import com.google.zxing.DecodeHintType
+import com.google.zxing.MultiFormatReader
+import com.google.zxing.NotFoundException
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.common.StringUtils
 import com.google.zxing.multi.GenericMultipleBarcodeReader
 import com.google.zxing.multi.MultipleBarcodeReader
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromStream
+import kotlinx.serialization.json.encodeToStream
 import notify.Notify
 import java.awt.Image
 import java.awt.Robot
 import java.awt.im.InputContext
 import java.awt.image.BufferedImage
-import java.io.File
 import java.io.InputStream
 import java.lang.IllegalArgumentException
 import java.nio.charset.Charset
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption.*
-import java.util.*
+import java.util.Locale
 import kotlin.system.exitProcess
+import com.google.zxing.Result as ZxingResult
 
 const val ApplicationName = "VirtualScanner"
 
 typealias Actions = List<Action>
 typealias KeyLayout = Map<Char, Actions>
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@Serializable
 data class Config(val layout: String = "de_DE_ISO.json",
                   val encodingHint: String = DefaultEncodingHint,
                   val normalizeLinebreaks: Boolean = true,
@@ -62,9 +66,10 @@ fun main(args: Array<String>) {
     InputContext.getInstance().selectInputMethod(Locale.ENGLISH)
     val mode = args.getOrElse(0) { "screen" }.lowercase()
 
-    val json = jacksonObjectMapper()
-        .enable(SerializationFeature.FLUSH_AFTER_WRITE_VALUE)
-        .enable(SerializationFeature.INDENT_OUTPUT)
+    val json = Json {
+        prettyPrint = true
+        ignoreUnknownKeys = true
+    }
 
     val config = load(json, args.getOrElse(1) {"config.json"}) ?: Config()
     val layout: KeyLayout = load(json, config.layout) ?: mapOf()
@@ -87,7 +92,7 @@ fun main(args: Array<String>) {
 }
 
 
-fun reader(encodingHint: String): (Image) -> Array<Result> {
+fun reader(encodingHint: String): (Image) -> Array<ZxingResult> {
     val reader: MultipleBarcodeReader = GenericMultipleBarcodeReader(MultiFormatReader())
     val hints = mapOf(
             Pair(DecodeHintType.CHARACTER_SET, encodingHint)
@@ -114,7 +119,7 @@ fun reader(encodingHint: String): (Image) -> Array<Result> {
     }
 }
 
-fun handleResults(robot: Robot, options: Options, results: Array<Result>, delay: Long): Boolean = when {
+fun handleResults(robot: Robot, options: Options, results: Array<ZxingResult>, delay: Long): Boolean = when {
     results.size == 1 -> {
         val result = results.first()
         val content = guessEncodingAndReencode(result.text)
@@ -188,8 +193,8 @@ fun act(r: Robot, action: Action) {
     }
 }
 
-inline fun <reified T : Any> load(json: ObjectMapper, path: String): T? {
-    val fromFile = read<T>(json, File(path))
+inline fun <reified T : Any> load(json: Json, path: String): T? {
+    val fromFile = read<T>(json, Paths.get(path))
     if (fromFile != null) {
         return fromFile
     }
@@ -202,13 +207,14 @@ inline fun <reified T : Any> load(json: ObjectMapper, path: String): T? {
     return null
 }
 
-inline fun <reified T : Any> read(json: ObjectMapper, file: File): T? {
-    return if (!file.canRead()) null
-    else maybe(file) { json.readValue(it) }
+inline fun <reified T : Any> read(json: Json, file: Path): T? {
+    return if (!Files.isReadable(file)) null
+    else maybe(file) { json.decodeFromString(Files.readString(it)) }
 }
 
-inline fun <reified T : Any> read(json: ObjectMapper, inStream: InputStream?): T? {
-    return maybe(inStream) { json.readValue(it) }
+@OptIn(ExperimentalSerializationApi::class)
+inline fun <reified T : Any> read(json: Json, inStream: InputStream?): T? {
+    return maybe(inStream) { json.decodeFromStream(it) }
 }
 
 inline fun <I : Any, O : Any> maybe(input: I?, f: (I) -> O): O? {
@@ -221,9 +227,10 @@ inline fun <I : Any, O : Any> maybe(input: I?, f: (I) -> O): O? {
     }
 }
 
-fun generateLayoutFile(json: ObjectMapper, path: String, table: Map<Char, List<Action>>) {
-    Files.newBufferedWriter(Paths.get(path), Charsets.UTF_8, WRITE, SYNC, DSYNC, TRUNCATE_EXISTING, CREATE).use {
-        json.writeValue(it, table)
+@OptIn(ExperimentalSerializationApi::class)
+fun generateLayoutFile(json: Json, path: String, table: Map<Char, List<Action>>) {
+    Files.newOutputStream(Paths.get(path), WRITE, SYNC, DSYNC, TRUNCATE_EXISTING, CREATE).use {
+        json.encodeToStream(table, it)
     }
 }
 
